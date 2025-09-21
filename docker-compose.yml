@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  endkan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: endkan:latest
+    container_name: endkan-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - LEAN_LOG_LEVEL=info
+      - RUST_LOG=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "lake", "exe", "test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - endkan-network
+
+  # Development service with live reloading
+  endkan-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    image: endkan:dev
+    container_name: endkan-dev
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - LEAN_LOG_LEVEL=debug
+      - RUST_LOG=debug
+      - CARGO_TARGET_DIR=/app/rust_production/target
+    command: ["lake", "exe", "test"]
+    networks:
+      - endkan-network
+    profiles:
+      - dev
+
+  # Testing service
+  endkan-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    image: endkan:test
+    container_name: endkan-test
+    volumes:
+      - .:/app
+    environment:
+      - LEAN_LOG_LEVEL=info
+      - RUST_LOG=info
+    command: ["make", "test"]
+    networks:
+      - endkan-network
+    profiles:
+      - test
+
+  # Benchmarking service
+  endkan-benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    image: endkan:benchmark
+    container_name: endkan-benchmark
+    volumes:
+      - .:/app
+      - ./benchmark-results:/app/benchmark-results
+    environment:
+      - LEAN_LOG_LEVEL=info
+      - RUST_LOG=info
+    command: ["make", "benchmark"]
+    networks:
+      - endkan-network
+    profiles:
+      - benchmark
+
+networks:
+  endkan-network:
+    driver: bridge
+
+volumes:
+  endkan-data:
+    driver: local
+  endkan-logs:
+    driver: local

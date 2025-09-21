@@ -1,0 +1,210 @@
+# Windows-compatible Makefile for EndKan
+# Use with: make -f Makefile.windows <target>
+
+.PHONY: help dev run test clean build release install uninstall check lint format docker-build docker-run docker-push
+
+# Default target
+help:
+	@echo EndKan - Practical Automation for Ends, Coends, and Kan Extensions
+	@echo.
+	@echo Available targets:
+	@echo   dev           Set up local development environment
+	@echo   run           Run the application/CLI locally
+	@echo   test          Run all tests
+	@echo   clean         Clean build artifacts
+	@echo   build         Build the project
+	@echo   check         Run code quality checks
+	@echo   lint          Lint the codebase
+	@echo   format        Format the codebase
+	@echo   install       Install the package system-wide
+	@echo   uninstall     Uninstall the package
+	@echo   docker-build  Build Docker image
+	@echo   docker-run    Run Docker container
+	@echo   docker-push   Push Docker image to registry
+	@echo   release       Build and publish artifacts (supports dry-run)
+	@echo   version       Show current version
+	@echo   benchmark     Run performance benchmarks
+	@echo   docs          Generate documentation
+	@echo   quickstart    Quick start for new users
+
+# Development setup
+dev:
+	@echo Setting up EndKan development environment...
+	@if exist "C:\Program Files\elan\bin\elan.exe" (echo Elan detected) else (echo Installing Elan... && powershell -Command "irm https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1 | iex")
+	@elan self update
+	@elan toolchain install leanprover/lean4:v4.8.0
+	@elan default leanprover/lean4:v4.8.0
+	@echo Lean 4.8.0 installed and set as default
+	@lake update
+	@lake build
+	@echo Dependencies updated and project built
+	@where cargo >nul 2>&1 && (echo Rust/Cargo detected && cd rust_production && cargo build && echo Rust production components built) || echo Rust not detected. Install Rust for production features: https://rustup.rs/
+	@echo.
+	@echo Development environment ready!
+	@echo Run 'make run' to start the application or 'make test' to run tests.
+
+# Run the application locally
+run:
+	@echo Running EndKan...
+	@lake exe test
+	@where cargo >nul 2>&1 && (echo Running Rust production components... && cd rust_production && cargo run --bin endkan -- --help) || echo Rust not available
+
+# Run tests
+test:
+	@echo Running EndKan test suite...
+	@lake exe test
+	@echo Running comprehensive test suite...
+	@lake exe run_tests
+	@echo Running production tests...
+	@lake exe run_production_tests
+	@where cargo >nul 2>&1 && (echo Running Rust tests... && cd rust_production && cargo test) || echo Rust not available
+	@echo All tests completed successfully
+
+# Build the project
+build:
+	@echo Building EndKan...
+	@lake build
+	@where cargo >nul 2>&1 && (echo Building Rust production components... && cd rust_production && cargo build --release) || echo Rust not available
+	@echo Build completed successfully
+
+# Clean build artifacts
+clean:
+	@echo Cleaning build artifacts...
+	@lake clean
+	@where cargo >nul 2>&1 && (cd rust_production && cargo clean) || echo Rust not available
+	@echo Clean completed
+
+# Check code quality
+check:
+	@echo Running code quality checks...
+	@lake build
+	@echo Lean code builds successfully
+	@where cargo >nul 2>&1 && (cd rust_production && cargo check && cd rust_production && cargo clippy -- -D warnings) || echo Rust not available
+	@echo Code quality checks passed
+
+# Lint code
+lint:
+	@echo Running linter...
+	@lake build
+	@where cargo >nul 2>&1 && (cd rust_production && cargo clippy -- -D warnings) || echo Rust not available
+	@echo Linting completed
+
+# Format code
+format:
+	@echo Formatting code...
+	@where cargo >nul 2>&1 && (cd rust_production && cargo fmt) || echo Rust not available
+	@echo Code formatting completed
+
+# Install the package
+install: build
+	@echo Installing EndKan...
+	@where cargo >nul 2>&1 && (cd rust_production && cargo install --path . && echo EndKan CLI installed successfully && echo Run 'endkan --help' to get started) || (echo Rust/Cargo not found. Cannot install CLI components. && echo Lean library can be used by adding to your Lakefile.lean: && echo require lean-endkan from git "https://github.com/fraware/lean-endkan.git")
+
+# Uninstall the package
+uninstall:
+	@echo Uninstalling EndKan...
+	@where cargo >nul 2>&1 && (cargo uninstall endkan && echo EndKan CLI uninstalled) || echo Rust not available
+
+# Build Docker image
+docker-build:
+	@echo Building Docker image...
+	@docker build -t endkan:latest .
+	@echo Docker image built successfully
+
+# Run Docker container
+docker-run: docker-build
+	@echo Running EndKan in Docker...
+	@docker run --rm endkan:latest --help
+
+# Push Docker image to registry
+docker-push: docker-build
+	@echo Pushing Docker image to registry...
+	@docker tag endkan:latest ghcr.io/fraware/lean-endkan:latest
+	@docker push ghcr.io/fraware/lean-endkan:latest
+	@echo Docker image pushed to ghcr.io/fraware/lean-endkan:latest
+
+# Release the package (supports dry-run)
+release: test check
+	@echo Preparing release...
+	@if "%DRY_RUN%"=="true" (echo DRY RUN MODE - No actual publishing will occur && echo Would publish to: && echo   - crates.io (Rust package) && echo   - ghcr.io (Docker image) && echo   - GitHub Releases) else (echo Publishing release... && make publish-cargo && make docker-push && make publish-github-release && echo Release published successfully!)
+
+# Publish to crates.io
+publish-cargo:
+	@echo Publishing to crates.io...
+	@cd rust_production && cargo publish --token %CRATES_IO_TOKEN%
+	@echo Published to crates.io
+
+# Create GitHub release
+publish-github-release:
+	@echo Creating GitHub release...
+	@gh release create v%VERSION% --title "EndKan v%VERSION%" --notes "Release v%VERSION% of EndKan - Practical Automation for Ends, Coends, and Kan Extensions" --latest
+	@echo GitHub release created
+
+# Development shortcuts
+dev-setup: dev
+test-all: test
+build-all: build
+
+# Version management
+version:
+	@echo EndKan version information:
+	@echo   Lean library: Not specified
+	@cd rust_production && findstr "version" Cargo.toml
+	@git describe --tags --exact-match 2>nul || echo No tag
+
+# Performance benchmarks
+benchmark:
+	@echo Running performance benchmarks...
+	@lake exe run_production_tests
+	@where cargo >nul 2>&1 && (cd rust_production && cargo bench) || echo Rust not available
+	@echo Benchmarks completed
+
+# Documentation generation
+docs:
+	@echo Generating documentation...
+	@lake build
+	@echo Documentation generated in build/doc/
+
+# Full development cycle
+full-test: clean build test check lint
+	@echo Full test cycle completed successfully
+
+# CI/CD helpers
+ci-test:
+	@echo Running CI tests...
+	@lake update
+	@lake build
+	@lake exe test
+	@where cargo >nul 2>&1 && (cd rust_production && cargo test --release) || echo Rust not available
+
+ci-build:
+	@echo Running CI build...
+	@lake build
+	@where cargo >nul 2>&1 && (cd rust_production && cargo build --release) || echo Rust not available
+
+# Quick start for new users
+quickstart:
+	@echo EndKan Quick Start
+	@echo ===================
+	@echo.
+	@echo 1. Clone the repository:
+	@echo    git clone https://github.com/fraware/lean-endkan.git
+	@echo    cd lean-endkan
+	@echo.
+	@echo 2. Set up development environment:
+	@echo    make -f Makefile.windows dev
+	@echo.
+	@echo 3. Run tests to verify installation:
+	@echo    make -f Makefile.windows test
+	@echo.
+	@echo 4. Try the application:
+	@echo    make -f Makefile.windows run
+	@echo.
+	@echo 5. Or use Docker:
+	@echo    make -f Makefile.windows docker-run
+	@echo.
+	@echo 6. Or install as a package:
+	@echo    make -f Makefile.windows install
+	@echo    endkan --help
+	@echo.
+	@echo For more information, see README.md

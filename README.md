@@ -103,16 +103,59 @@ graph TB
 
 ## Quick Start
 
-### 1. Installation
+### 🚀 One-Command Install & Run
 
+Get EndKan running in under 10 minutes with these copy-paste commands:
+
+#### Option 1: Docker (Recommended for quick testing)
+```bash
+# Run EndKan in Docker
+docker run --rm ghcr.io/fraware/lean-endkan:latest --help
+
+# Or build and run locally
+git clone https://github.com/fraware/lean-endkan.git
+cd lean-endkan
+docker build -t endkan:latest .
+docker run --rm endkan:latest
+```
+
+#### Option 2: Rust Package (CLI Tool)
+```bash
+# Install the CLI tool
+cargo install endkan
+
+# Use it immediately
+endkan --help
+endkan test
+endkan benchmark
+```
+
+#### Option 3: Full Development Setup
+```bash
+# Clone and set up development environment
+git clone https://github.com/fraware/lean-endkan.git
+cd lean-endkan
+
+# Linux/macOS
+make dev
+make test
+make run
+
+# Windows
+.\setup.ps1 dev
+.\setup.ps1 test
+.\setup.ps1 run
+```
+
+#### Option 4: Lean Library Only
 Add to your `Lakefile.lean`:
-
 ```lean
 require lean-endkan from git "https://github.com/fraware/lean-endkan.git"
 ```
 
-### 2. Basic Usage
+### 🎯 Basic Usage Examples
 
+#### End β/η Transformations
 ```lean
 import EndKan
 
@@ -120,16 +163,72 @@ import EndKan
 example (F : Cᵒᵖ × C ⥤ D) (c : C) :
   End.lift (fun c => f c) h ≫ End.π F c = f c := by
   end_beta
+```
 
+#### Kan Extension Fusion
+```lean
 -- Kan extension fusion
 example (K : C ⥤ D) (F : C ⥤ E) (hK : Full K) (hK' : Faithful K) :
   Lan K F ≅ F := by
   kan_fuse
+```
 
+#### Beck-Chevalley Conditions
+```lean
 -- Beck-Chevalley conditions
 example (S : BeckChevalley.Square K L M N) [BeckChevalley S] :
   M ⋙ Lan L (𝟙 E) ≅ Lan K (𝟙 D) ⋙ N := by
   beck_chevalley!
+```
+
+### 🛠️ Development Commands
+
+```bash
+# Set up development environment
+make dev
+
+# Run all tests
+make test
+
+# Build the project
+make build
+
+# Run performance benchmarks
+make benchmark
+
+# Check code quality
+make check
+
+# Install system-wide
+make install
+
+# Clean build artifacts
+make clean
+
+# Get help
+make help
+```
+
+### 🐳 Docker Commands
+
+```bash
+# Build Docker image
+make docker-build
+
+# Run in Docker
+make docker-run
+
+# Push to registry
+make docker-push
+
+# Development with live reloading
+docker-compose --profile dev up
+
+# Run tests in Docker
+docker-compose --profile test up
+
+# Run benchmarks in Docker
+docker-compose --profile benchmark up
 ```
 
 ---
@@ -138,32 +237,64 @@ example (S : BeckChevalley.Square K L M N) [BeckChevalley S] :
 
 ### Prerequisites
 
-- **Lean 4.8.0** or later
-- **Mathlib v4.6.0** or later
-- **Rust 1.70+** (for production features)
+- **Docker** (recommended) or **Lean 4.8.0+** and **Rust 1.70+**
+- **Mathlib v4.6.0+** (automatically installed)
 
-### Step-by-Step Setup
+### Installation Methods
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/fraware/lean-endkan.git
-   cd lean-endkan
-   ```
+#### Method 1: Docker (Easiest)
+```bash
+# Pull and run immediately
+docker run --rm ghcr.io/fraware/lean-endkan:latest
 
-2. **Build the project**
-   ```bash
-   lake build
-   ```
+# Or build locally
+git clone https://github.com/fraware/lean-endkan.git
+cd lean-endkan
+docker build -t endkan:latest .
+```
 
-3. **Run tests**
-   ```bash
-   lake exe test
-   ```
+#### Method 2: Automated Setup
+```bash
+git clone https://github.com/fraware/lean-endkan.git
+cd lean-endkan
 
-4. **Build production version** (optional)
-   ```bash
-   cargo build --release
-   ```
+# Linux/macOS
+make dev    # Sets up everything automatically
+make test   # Verifies installation
+
+# Windows
+.\setup.ps1 dev    # Sets up everything automatically
+.\setup.ps1 test   # Verifies installation
+```
+
+#### Method 3: Manual Setup
+```bash
+# 1. Install Lean 4.8.0+
+elan toolchain install leanprover/lean4:v4.8.0
+elan default leanprover/lean4:v4.8.0
+
+# 2. Install Rust (for production features)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 3. Clone and build
+git clone https://github.com/fraware/lean-endkan.git
+cd lean-endkan
+lake update
+lake build
+
+# 4. Build Rust components
+cd rust_production
+cargo build --release
+```
+
+#### Method 4: Package Installation
+```bash
+# Install as Rust CLI tool
+cargo install endkan
+
+# Use immediately
+endkan --help
+```
 
 ---
 

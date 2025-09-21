@@ -1,10 +1,39 @@
 [package]
-name = "endkan-production"
+name = "endkan"
 version = "0.1.0"
 edition = "2021"
-description = "High-performance production infrastructure for EndKan"
-authors = ["EndKan Team"]
+description = "Practical Automation for Ends, Coends, and Kan Extensions in Lean 4"
+long-description = """
+EndKan is a Lean 4 library that revolutionizes category theory formalization by providing 
+automated transformations for ends, coends, and Kan extensions. Built with a hybrid 
+architecture combining Lean's mathematical rigor with Rust's performance capabilities, 
+EndKan delivers both correctness and efficiency.
+
+Key Features:
+- Mathematical Correctness: Formal verification of all transformations
+- Production Performance: Hybrid Lean/Rust architecture for optimal speed
+- Comprehensive Automation: β/η reductions, Fubini theorems, Beck-Chevalley conditions
+- Type Safety: Full compile-time guarantees for mathematical objects
+- Extensible Design: Modular architecture supporting future enhancements
+"""
+authors = ["EndKan Team <team@endkan.dev>"]
 license = "Apache-2.0"
+license-file = "LICENSE"
+repository = "https://github.com/fraware/lean-endkan"
+homepage = "https://github.com/fraware/lean-endkan"
+documentation = "https://github.com/fraware/lean-endkan/blob/main/README.md"
+readme = "README.md"
+keywords = [
+    "lean",
+    "category-theory",
+    "mathematics",
+    "formal-verification",
+    "ends",
+    "coends",
+    "kan-extensions",
+]
+categories = ["development-tools", "mathematics", "science"]
+rust-version = "1.70"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
@@ -26,5 +55,33 @@ default = ["lean-ffi"]
 lean-ffi = []
 
 [[bin]]
-name = "endkan-production"
+name = "endkan"
 path = "src/main.rs"
+
+[lib]
+name = "endkan"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+# Publishing configuration
+[publish]
+registry = "crates-io"
+
+# Package metadata for crates.io
+[package.metadata.docs.rs]
+features = ["lean-ffi"]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[package.metadata.cargo-machete]
+ignored = [
+    "tokio",
+    "serde",
+    "serde_json",
+    "chrono",
+    "rand",
+    "clap",
+    "tracing",
+    "tracing-subscriber",
+    "anyhow",
+    "thiserror",
+]

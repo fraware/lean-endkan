@@ -1,0 +1,71 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+target/
+.lean/
+lake-packages/
+
+# Logs
+*.log
+logs/
+
+# Test results
+test-results/
+coverage/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Node modules (if any)
+node_modules/
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+*.pyo
+
+# Rust build cache
+rust_production/target/
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Benchmarks and performance data
+benchmark-results/
+performance-data/
+
+# Backup files
+*.bak
+*.backup
