@@ -259,9 +259,9 @@ def stressTestErrorHandling : IO Unit := do
   let elapsed := endTime - startTime
   IO.println s!"Error handling stress test: {elapsed}ms for 1000 iterations"
 
-/-- Run comprehensive benchmark suite -/
+/-- Run the full tactic benchmark suite -/
 def runComprehensiveBenchmarks : IO Unit := do
-  IO.println "Running comprehensive EndKan benchmark suite..."
+  IO.println "Running EndKan tactic benchmark suite..."
   IO.println "=============================================="
 
   runAllBenchmarks

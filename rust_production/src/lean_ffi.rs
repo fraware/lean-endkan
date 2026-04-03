@@ -1,11 +1,10 @@
 //! Foreign Function Interface for Lean integration
 //!
-//! This module provides the interface between Lean's mathematical core
-//! and Rust's production infrastructure.
+//! This module provides the interface between Lean and the optional Rust demo helpers.
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 
-use crate::{CachingSystem, PerformanceMetrics, TelemetryEvent, TelemetrySystem};
-use serde_json;
-use std::ffi::{CStr, CString};
+use crate::{PerformanceMetrics, TelemetryEvent};
+use std::ffi::CStr;
 use std::os::raw::c_char;
 
 /// FFI function to record performance metrics from Lean
@@ -18,7 +17,7 @@ pub extern "C" fn record_performance_metrics(
 ) {
     let operation_str = unsafe { CStr::from_ptr(operation).to_string_lossy().into_owned() };
 
-    let metrics = PerformanceMetrics {
+    let _metrics = PerformanceMetrics {
         execution_time_ms,
         memory_usage_bytes,
         cpu_usage_percent: 0.0, // Would be calculated in Rust
@@ -29,7 +28,7 @@ pub extern "C" fn record_performance_metrics(
         timestamp: chrono::Utc::now().timestamp_millis() as u64,
     };
 
-    // In a real implementation, this would send to the production system
+    // A fuller integration could forward these metrics elsewhere
     println!(
         "Recorded metrics for {}: {}ms, {}MB, success={}",
         operation_str,

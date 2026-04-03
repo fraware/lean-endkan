@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: leanprover/lean4-action@v2
+        with:
+          lean-version: 4.8.0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Lean
+        run: |
+          lake update
+          lake build
+
+      - name: Build Rust release binary
+        working-directory: rust_production
+        run: cargo build --release
+
+      - name: Package binary
+        run: |
+          cp rust_production/target/release/endkan endkan-linux-x86_64
+          chmod +x endkan-linux-x86_64
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: endkan-linux-x86_64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

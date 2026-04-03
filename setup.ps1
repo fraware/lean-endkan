@@ -88,23 +88,23 @@ function Setup-Dev {
         Set-Location "rust_production"
         cargo build
         Set-Location ".."
-        Write-Host "✓ Rust production components built" -ForegroundColor Green
+        Write-Host "✓ Rust program built" -ForegroundColor Green
     }
     else {
-        Write-Host "⚠ Rust not detected. Install Rust for production features: https://rustup.rs/" -ForegroundColor Yellow
+        Write-Host "⚠ Rust not detected. Install Rust from https://rustup.rs/ if you want the optional CLI." -ForegroundColor Yellow
     }
     
     Write-Host ""
-    Write-Host "🎉 Development environment ready!" -ForegroundColor Green
+    Write-Host "Development environment ready." -ForegroundColor Green
     Write-Host "Run '.\setup.ps1 run' to start the application or '.\setup.ps1 test' to run tests." -ForegroundColor Cyan
 }
 
 function Run-Tests {
     Write-Host "Running EndKan test suite..." -ForegroundColor Cyan
     lake exe test
-    Write-Host "Running comprehensive test suite..." -ForegroundColor Cyan
+    Write-Host "Running longer Lean smoke tests..." -ForegroundColor Cyan
     lake exe run_tests
-    Write-Host "Running production tests..." -ForegroundColor Cyan
+    Write-Host "Running demo monitoring / benchmark harness..." -ForegroundColor Cyan
     lake exe run_production_tests
     
     if (Test-Command "cargo") {
@@ -122,7 +122,7 @@ function Build-Project {
     lake build
     
     if (Test-Command "cargo") {
-        Write-Host "Building Rust production components..." -ForegroundColor Cyan
+        Write-Host "Building Rust program..." -ForegroundColor Cyan
         Set-Location "rust_production"
         cargo build --release
         Set-Location ".."
@@ -169,12 +169,12 @@ function Install-Package {
         cargo install --path .
         Set-Location ".."
         Write-Host "✓ EndKan CLI installed successfully" -ForegroundColor Green
-        Write-Host "Run 'endkan --help' to get started" -ForegroundColor Cyan
+        Write-Host "Run 'endkan health --help' for CLI options" -ForegroundColor Cyan
     }
     else {
         Write-Host "⚠ Rust/Cargo not found. Cannot install CLI components." -ForegroundColor Yellow
         Write-Host "Lean library can be used by adding to your Lakefile.lean:" -ForegroundColor Cyan
-        Write-Host 'require lean-endkan from git "https://github.com/fraware/lean-endkan.git"' -ForegroundColor White
+        Write-Host 'require «lean-endkan» from git "https://github.com/fraware/lean-endkan.git" @ "main"' -ForegroundColor White
     }
 }
 
@@ -193,7 +193,7 @@ function Run-Docker {
     Write-Host "Running EndKan in Docker..." -ForegroundColor Cyan
     if (Test-Command "docker") {
         Build-Docker
-        docker run --rm endkan:latest --help
+        docker run --rm endkan:latest health
     }
     else {
         Write-Host "✗ Docker not found. Please install Docker Desktop." -ForegroundColor Red
@@ -201,20 +201,20 @@ function Run-Docker {
 }
 
 function Run-Benchmark {
-    Write-Host "Running performance benchmarks..." -ForegroundColor Cyan
+    Write-Host "Running demo benchmark harness..." -ForegroundColor Cyan
     lake exe run_production_tests
     
     if (Test-Command "cargo") {
         Set-Location "rust_production"
-        cargo bench
+        cargo test --release
         Set-Location ".."
     }
     
-    Write-Host "✓ Benchmarks completed" -ForegroundColor Green
+    Write-Host "✓ Benchmark step finished" -ForegroundColor Green
 }
 
 function Show-Quickstart {
-    Write-Host "🚀 EndKan Quick Start" -ForegroundColor Cyan
+    Write-Host "EndKan quick start" -ForegroundColor Cyan
     Write-Host "====================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "1. Clone the repository:" -ForegroundColor Yellow
@@ -235,9 +235,9 @@ function Show-Quickstart {
     Write-Host ""
     Write-Host "6. Or install as a package:" -ForegroundColor Yellow
     Write-Host "   .\setup.ps1 install" -ForegroundColor White
-    Write-Host "   endkan --help" -ForegroundColor White
+    Write-Host "   endkan health --help" -ForegroundColor White
     Write-Host ""
-    Write-Host "📚 For more information, see README.md" -ForegroundColor Cyan
+    Write-Host "See README.md for more." -ForegroundColor Cyan
 }
 
 # Main command dispatcher
@@ -248,9 +248,9 @@ switch ($Command.ToLower()) {
         Write-Host "Running EndKan..." -ForegroundColor Cyan
         lake exe test
         if (Test-Command "cargo") {
-            Write-Host "Running Rust production components..." -ForegroundColor Cyan
+            Write-Host "Running Rust CLI (help for health subcommand)..." -ForegroundColor Cyan
             Set-Location "rust_production"
-            cargo run --bin endkan -- --help
+            cargo run --bin endkan -- health --help
             Set-Location ".."
         }
     }

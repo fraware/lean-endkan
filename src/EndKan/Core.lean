@@ -164,7 +164,7 @@ def exportCoreData (core : EndKanCore) : String :=
 
 /-- Import core data from external systems -/
 def importCoreData (data : String) : Option EndKanCore :=
-  -- Simplified JSON parsing - in production would use proper JSON library
+  -- Simplified JSON parsing; a fuller stack could use a dedicated JSON library
   if data.contains "end_equality" then
     some {
       patternType := "end_equality"

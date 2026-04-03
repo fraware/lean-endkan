@@ -1,6 +1,8 @@
-# EndKan API Reference
+# EndKan API reference
 
-## Core Types
+> **Note:** This overview is edited by hand. When you add or change public names or tactics, update this file too. See [BUILDING_DOCS.md](BUILDING_DOCS.md).
+
+## Core types
 
 ### Ends
 - `EndObj F` — The end of a functor F : Cᵒᵖ × C ⥤ D
@@ -14,84 +16,85 @@
 - `Coend.desc f h` — Universal property of coends
 - `Coend.map α` — Functoriality of coends
 
-### Kan Extensions
+### Kan extensions
 - `Lan K F` — Left Kan extension of F along K
 - `Ran K F` — Right Kan extension of F along K
 - `Lan.universal α` — Universal property of left Kan extensions
 - `Ran.universal α` — Universal property of right Kan extensions
 
-### Beck-Chevalley
+### Beck–Chevalley
 - `BeckChevalley.Square K L M N` — Commutative square of functors
-- `BeckChevalley S` — Beck-Chevalley condition for a square
-- `beckChevalleyIso` — Beck-Chevalley isomorphism
+- `BeckChevalley S` — Beck–Chevalley condition for a square
+- `beckChevalleyIso` — Beck–Chevalley isomorphism
 
 ## Tactics
 
-### End Tactics
-- `end_beta` — β-reduction for ends
-- `end_eta` — η-expansion for ends
-- `endkan_beta` — Combined end/coend β-reduction
-- `endkan_eta` — Combined end/coend η-expansion
+See [TACTIC_INDEX.md](TACTIC_INDEX.md) for every registered tactic, including variants with `!` and combined tactics.
 
-### Coend Tactics
-- `coend_beta` — β-reduction for coends
-- `coend_eta` — η-expansion for coends
+### End tactics
+- `end_beta` — β-style step for ends
+- `end_eta` — η-style step for ends
+- `endkan_beta` — Combined end/coend β-style step
+- `endkan_eta` — Combined end/coend η-style step
 
-### Kan Tactics
-- `kan_fuse` — Fuses Kan constructions via known universal properties
-- `beck_chevalley!` — Check/apply Beck-Chevalley on a declared square
+### Coend tactics
+- `coend_beta` — β-style step for coends
+- `coend_eta` — η-style step for coends
 
-### Combined Tactics
-- `endkan_all` — All tactics combined
+### Kan tactics
+- `kan_fuse` — Use known universal properties for Kan extensions
+- `beck_chevalley!` — Beck–Chevalley on a declared square
+
+### Combined tactics
+- `endkan_all` — Run the combined pipeline
 
 ## Attributes
 
-### Kan Square Attribute
-- `@[kan.square]` — Registers a commutative square with Beck-Chevalley conditions
+- `@[kan.square]` — Mark a commutative square for Beck–Chevalley tactics
 
 ## Configuration
 
 ### Options
 - `endkan.timeoutMs` — Timeout in milliseconds (default: 2000)
-- `endkan.trace` — Enable/disable tracing (default: false)
-- `endkan.maxSteps` — Maximum number of steps (default: 200)
+- `endkan.trace` — Tracing on or off (default: false)
+- `endkan.maxSteps` — Step limit (default: 200)
 
-### Configuration Functions
+### Functions
 - `setTimeout ms` — Set timeout
 - `setTrace b` — Set tracing
-- `setMaxSteps n` — Set maximum steps
+- `setMaxSteps n` — Set step limit
 
 ## Examples
 
-### Basic End Usage
+### End
 ```lean
 example (F : Cᵒᵖ × C ⥤ D) (c : C) :
   End.lift (fun c => f c) h ≫ End.π F c = f c := by
   end_beta
 ```
 
-### Basic Coend Usage
+### Coend
 ```lean
 example (F : C × Cᵒᵖ ⥤ D) (c : C) :
   Coend.ι F c ≫ Coend.desc f h = f c := by
   coend_beta
 ```
 
-### Kan Extension Usage
+### Kan extension
 ```lean
 example (K : C ⥤ D) (F : C ⥤ E) (hK : Full K) (hK' : Faithful K) :
   Lan K F ≅ F := by
   kan_fuse
 ```
 
-### Beck-Chevalley Usage
+### Beck–Chevalley
 ```lean
 example (S : BeckChevalley.Square K L M N) [BeckChevalley S] :
   M ⋙ Lan L (𝟙 E) ≅ Lan K (𝟙 D) ⋙ N := by
   beck_chevalley!
 ```
 
-### Fubini's Theorem
+### Fubini-style sketch
 ```lean
 example (F : (C × D)ᵒᵖ × (C × D) ⥤ E) :
   EndObj F ≅ EndObj (fun c => EndObj (fun d => F.obj (op (c, d), (c, d)))) := by
@@ -102,14 +105,8 @@ example (F : (C × D)ᵒᵖ × (C × D) ⥤ E) :
 
 ## Performance
 
-The library is designed to meet the following performance targets:
-- P95 ≤ 500ms on the golden test suite
-- Success ≥ 70% on canned naturality/Kan patterns without manual steps
-- Deterministic behavior across multiple runs
+Tactics are meant for **interactive** proofs. Speed depends on your goal and context.
 
-## Telemetry
+## Rust command-line tool
 
-The library includes opt-in telemetry to collect:
-- Counts and timings per tactic
-- Number of components in ends/coends
-- Success rates and performance metrics
+The program under `rust_production` can print simple health and timing messages. You do **not** need it to use the Lean library.

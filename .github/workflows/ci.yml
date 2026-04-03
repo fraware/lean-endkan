@@ -2,405 +2,88 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  lean:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        lean-version: [4.8.0, 4.9.0, 4.10.0]
-        test-type: [unit, integration, e2e, performance]
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean ${{ matrix.lean-version }}
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: ${{ matrix.lean-version }}
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Run ${{ matrix.test-type }} tests
-      run: |
-        lake test --test-type=${{ matrix.test-type }}
-      env:
-        LEAN_TEST_TIMEOUT: 30000
-        LEAN_TEST_MEMORY_LIMIT: 100000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: true
-        LEAN_TEST_MAX_PARALLEL: 4
-    
-    - name: Generate test report
-      if: always()
-      run: |
-        lake test --report-format=json --output=test-results-${{ matrix.test-type }}.json
-        lake test --report-format=xml --output=test-results-${{ matrix.test-type }}.xml
-        lake test --report-format=csv --output=test-results-${{ matrix.test-type }}.csv
-    
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ matrix.test-type }}-${{ matrix.lean-version }}
-        path: |
-          test-results-${{ matrix.test-type }}.json
-          test-results-${{ matrix.test-type }}.xml
-          test-results-${{ matrix.test-type }}.csv
-    
-    - name: Check test coverage
-      if: always()
-      run: |
-        lake test --coverage --coverage-format=lcov --output=coverage-${{ matrix.test-type }}.lcov
-    
-    - name: Upload coverage
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-${{ matrix.test-type }}-${{ matrix.lean-version }}
-        path: coverage-${{ matrix.test-type }}.lcov
+      - uses: actions/checkout@v4
 
-  performance:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.10.0
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Run performance tests
-      run: |
-        lake test --test-type=performance --performance-baseline=main
-      env:
-        LEAN_TEST_TIMEOUT: 120000
-        LEAN_TEST_MEMORY_LIMIT: 1000000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: false
-        LEAN_TEST_MAX_PARALLEL: 1
-    
-    - name: Generate performance report
-      if: always()
-      run: |
-        lake test --performance-report --output=performance-report.json
-    
-    - name: Upload performance report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-report
-        path: performance-report.json
-    
-    - name: Comment performance results
-      if: always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const report = JSON.parse(fs.readFileSync('performance-report.json', 'utf8'));
-          
-          const comment = `## Performance Test Results
-          
-          **Overall Performance Ratio:** ${report.overallPerformanceRatio.toFixed(2)}x
-          
-          **Regression Tests:** ${report.regressionTests.length}
-          **Improvement Tests:** ${report.improvementTests.length}
-          
-          ### Regression Tests
-          ${report.regressionTests.map(t => `- ${t.name}: ${t.performanceRatio.toFixed(2)}x slower`).join('\n')}
-          
-          ### Improvement Tests
-          ${report.improvementTests.map(t => `- ${t.name}: ${t.performanceRatio.toFixed(2)}x faster`).join('\n')}
-          `;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+      - uses: leanprover/lean4-action@v2
+        with:
+          lean-version: 4.8.0
 
-  security:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.10.0
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Run security tests
-      run: |
-        lake test --test-type=security --security-scan
-      env:
-        LEAN_TEST_TIMEOUT: 60000
-        LEAN_TEST_MEMORY_LIMIT: 500000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: false
-        LEAN_TEST_MAX_PARALLEL: 1
-    
-    - name: Generate security report
-      if: always()
-      run: |
-        lake test --security-report --output=security-report.json
-    
-    - name: Upload security report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-report
-        path: security-report.json
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/lean
+            .lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean-toolchain', 'lake-manifest.json', 'Lakefile.lean', 'lakefile.lean') }}
+          restore-keys: |
+            lake-${{ runner.os }}-
 
-  quality:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.10.0
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Run quality checks
-      run: |
-        lake test --test-type=quality --quality-scan
-      env:
-        LEAN_TEST_TIMEOUT: 30000
-        LEAN_TEST_MEMORY_LIMIT: 100000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: false
-        LEAN_TEST_MAX_PARALLEL: 1
-    
-    - name: Generate quality report
-      if: always()
-      run: |
-        lake test --quality-report --output=quality-report.json
-    
-    - name: Upload quality report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: quality-report
-        path: quality-report.json
+      - name: Resolve dependencies and build
+        run: |
+          lake update
+          lake build
 
-  documentation:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.10.0
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Generate documentation
-      run: |
-        lake test --test-type=documentation --generate-docs
-      env:
-        LEAN_TEST_TIMEOUT: 60000
-        LEAN_TEST_MEMORY_LIMIT: 500000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: false
-        LEAN_TEST_MAX_PARALLEL: 1
-    
-    - name: Upload documentation
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation
-        path: docs/
+      - name: Executable smoke tests
+        run: |
+          lake exe test
+          lake exe run_tests
+          lake exe test-runner -- dev unit
 
-  build-artifacts:
+  rust:
     runs-on: ubuntu-latest
-    needs: [test, performance, security, quality, documentation]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.8.0
-    
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        components: rustfmt, clippy
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Build Rust production components
-      run: |
-        cd rust_production
-        cargo build --release
-    
-    - name: Build Docker image
-      run: |
-        docker build -t endkan:${{ github.sha }} .
-        docker tag endkan:${{ github.sha }} endkan:latest
-    
-    - name: Run deployment tests
-      run: |
-        make test
-        make check
-      env:
-        LEAN_TEST_TIMEOUT: 120000
-        LEAN_TEST_MEMORY_LIMIT: 1000000000
-        LEAN_TEST_VERBOSE: true
-        LEAN_TEST_PARALLEL: false
-        LEAN_TEST_MAX_PARALLEL: 1
+      - uses: actions/checkout@v4
 
-  release:
-    runs-on: ubuntu-latest
-    needs: [build-artifacts]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Lean
-      uses: leanprover/lean4-action@v2
-      with:
-        lean-version: 4.8.0
-    
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    
-    - name: Install dependencies
-      run: |
-        lake update
-        lake build
-    
-    - name: Build Rust production components
-      run: |
-        cd rust_production
-        cargo build --release
-    
-    - name: Get version
-      id: version
-      run: |
-        VERSION=$(cd rust_production && grep '^version' Cargo.toml | cut -d'"' -f2)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-    
-    - name: Publish to crates.io
-      run: |
-        cd rust_production
-        cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
-      env:
-        CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
-    
-    - name: Build and push Docker image
-      run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        docker build -t ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }} .
-        docker build -t ghcr.io/${{ github.repository }}:latest .
-        docker push ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-        docker push ghcr.io/${{ github.repository }}:latest
-    
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.version.outputs.tag }}
-        release_name: EndKan ${{ steps.version.outputs.version }}
-        body: |
-          ## EndKan v${{ steps.version.outputs.version }}
-          
-          ### Installation
-          
-          #### Docker
-          ```bash
-          docker run --rm ghcr.io/${{ github.repository }}:latest --help
-          ```
-          
-          #### Rust Package
-          ```bash
-          cargo install endkan
-          endkan --help
-          ```
-          
-          #### Lean Library
-          Add to your `Lakefile.lean`:
-          ```lean
-          require lean-endkan from git "https://github.com/${{ github.repository }}.git"
-          ```
-          
-          ### What's New
-          - Automated transformations for ends, coends, and Kan extensions
-          - High-performance Rust production infrastructure
-          - Comprehensive test suite and benchmarks
-          - Docker support for easy deployment
-        draft: false
-        prerelease: false
-    
-    - name: Upload release artifacts
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./rust_production/target/release/endkan
-        asset_name: endkan-${{ steps.version.outputs.version }}-linux-x86_64
-        asset_content_type: application/octet-stream
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
-  notify:
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust_production/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('rust_production/Cargo.lock') }}
+
+      - name: Cargo fmt
+        working-directory: rust_production
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: rust_production
+        run: cargo clippy -- -D warnings
+
+      - name: Tests
+        working-directory: rust_production
+        run: cargo test
+
+  audit:
     runs-on: ubuntu-latest
-    needs: [test, performance, security, quality, documentation, build-artifacts]
-    if: always()
-    
     steps:
-    - name: Notify on success
-      if: needs.test.result == 'success' && needs.performance.result == 'success' && needs.security.result == 'success' && needs.quality.result == 'success' && needs.documentation.result == 'success'
-      run: |
-        echo "All tests passed successfully!"
-        # Add notification logic here (e.g., Slack, Discord, email)
-    
-    - name: Notify on failure
-      if: needs.test.result == 'failure' || needs.performance.result == 'failure' || needs.security.result == 'failure' || needs.quality.result == 'failure' || needs.documentation.result == 'failure'
-      run: |
-        echo "Some tests failed!"
-        # Add notification logic here (e.g., Slack, Discord, email)
+      - uses: actions/checkout@v4
+
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: rust_production
+
+  deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: rust_production/Cargo.toml

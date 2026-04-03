@@ -14,41 +14,41 @@ open CategoryTheory
 open CategoryTheory.Limits
 open Lean Elab Tactic Meta
 
-/-- Foreign function interface for Rust production system -/
+/-- Calls into the optional Rust binary (same machine; see `rust_production`). -/
 
-/-- Record performance metrics to Rust production system -/
+/-- Send timing and memory numbers to the Rust side -/
 @[extern "lean_record_performance_metrics"]
 opaque recordPerformanceMetrics (operation : String) (executionTimeMs : Nat) (memoryUsageBytes : Nat) (success : Bool) : IO Unit
 
-/-- Record telemetry event to Rust production system -/
+/-- Send a short event record to the Rust side -/
 @[extern "lean_record_telemetry_event"]
 opaque recordTelemetryEvent (eventType : String) (operation : String) (executionTimeMs : Nat) (success : Bool) (errorMessage : Option String) : IO Unit
 
-/-- Get cached pattern from Rust production system -/
+/-- Read a cached pattern string from the Rust side -/
 @[extern "lean_get_cached_pattern"]
 opaque getCachedPattern (patternKey : String) : IO (Option String)
 
-/-- Set cached pattern in Rust production system -/
+/-- Store a pattern string on the Rust side -/
 @[extern "lean_set_cached_pattern"]
 opaque setCachedPattern (patternKey : String) (patternValue : String) : IO Unit
 
-/-- Get configuration value from Rust production system -/
+/-- Read a configuration string from the Rust side -/
 @[extern "lean_get_config_value"]
 opaque getConfigValue (configKey : String) : IO (Option String)
 
-/-- Check system health in Rust production system -/
+/-- Ask the Rust side for a short health string -/
 @[extern "lean_check_system_health"]
 opaque checkSystemHealth : IO String
 
-/-- Export Lean core data to Rust production system -/
+/-- Send serialized core data to the Rust side -/
 @[extern "lean_export_lean_core_data"]
 opaque exportLeanCoreData (coreData : String) : IO Unit
 
-/-- Import data from Rust production system to Lean -/
+/-- Receive a string from the Rust side and interpret it -/
 @[extern "lean_import_data_to_lean"]
 opaque importDataToLean (data : String) : IO String
 
-/-- Enhanced tactic execution with production integration -/
+/-- Run a tactic name and optionally notify the Rust side (metrics / events). -/
 def executeTacticWithProduction (tacticName : String) : TacticM Unit := do
   let startTime ← IO.monoMsNow
   let startMemory ← IO.getMemoryUsage
@@ -109,7 +109,7 @@ def matchPatternWithCache (expr : Expr) : MetaM Core.EndKanCore := do
 
 /-- Configuration-aware tactic execution -/
 def executeTacticWithConfig (tacticName : String) : TacticM Unit := do
-  -- Get configuration from Rust production system
+  -- Optional settings from the Rust side
   let timeoutMs ← getConfigValue "performance.timeout_ms"
   let maxMemoryMB ← getConfigValue "performance.max_memory_mb"
   let telemetryEnabled ← getConfigValue "telemetry.enabled"
@@ -123,21 +123,21 @@ def executeTacticWithConfig (tacticName : String) : TacticM Unit := do
   | none =>
       executeTacticWithProduction tacticName
 
-/-- Health check integration -/
+/-- Ask the Rust binary for a health string -/
 def checkProductionHealth : IO String := do
   checkSystemHealth
 
-/-- Export core data for production monitoring -/
+/-- Serialize core state and send it to the Rust side -/
 def exportCoreDataForProduction (core : Core.EndKanCore) : IO Unit := do
   let coreData := Core.exportCoreData core
   exportLeanCoreData coreData
 
-/-- Import production data -/
+/-- Pull data from the Rust side into a core value -/
 def importProductionData (data : String) : IO (Option Core.EndKanCore) := do
   let processedData ← importDataToLean data
   return Core.importCoreData processedData
 
-/-- Production-ready tactic execution -/
+/-- Run a tactic after a quick health string check (demo hook). -/
 def executeProductionTactic (tacticName : String) : TacticM Unit := do
   -- Check system health
   let health ← checkProductionHealth
@@ -147,7 +147,7 @@ def executeProductionTactic (tacticName : String) : TacticM Unit := do
   -- Execute with configuration
   executeTacticWithConfig tacticName
 
-/-- Benchmark integration -/
+/-- Simple repeated timing loop that reports to the Rust side (demo). -/
 def runBenchmark (operation : String) (iterations : Nat) : IO Unit := do
   for _ in [0:iterations] do
     let startTime ← IO.monoMsNow
@@ -164,15 +164,15 @@ def runBenchmark (operation : String) (iterations : Nat) : IO Unit := do
     -- Record benchmark metrics
     recordPerformanceMetrics operation executionTime memoryUsage true
 
-/-- Production monitoring integration -/
+/-- Build a short text report from health and config (demo). -/
 def generateProductionReport : IO String := do
   let health ← checkProductionHealth
   let config ← getConfigValue "performance.timeout_ms"
   let timeout := config.getD "2000"
 
-  return s!"EndKan Production Report\n\
-           ======================\n\n\
-           System Health: {health}\n\
+  return s!"EndKan status\n\
+           -------------\n\
+           Health: {health}\n\
            Timeout: {timeout}ms\n\
            Timestamp: {← IO.monoMsNow}\n"
 

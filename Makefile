@@ -26,30 +26,30 @@ dev: ## Set up local development environment
 	@if command -v cargo >/dev/null 2>&1; then \
 		echo "✓ Rust/Cargo detected"; \
 		cd rust_production && cargo build; \
-		echo "✓ Rust production components built"; \
+		echo "✓ Rust program built"; \
 	else \
-		echo "⚠ Rust not detected. Install Rust for production features: https://rustup.rs/"; \
+		echo "⚠ Rust not detected. Install from https://rustup.rs/ for the optional CLI."; \
 	fi
 	@echo ""
-	@echo "🎉 Development environment ready!"
-	@echo "Run 'make run' to start the application or 'make test' to run tests."
+	@echo "Development environment ready."
+	@echo "Run 'make run' or 'make test' next."
 
 # Run the application locally
 run: ## Run the application/CLI locally
 	@echo "Running EndKan..."
 	@lake exe test
 	@if command -v cargo >/dev/null 2>&1; then \
-		echo "Running Rust production components..."; \
-		cd rust_production && cargo run --bin endkan-production -- --help; \
+		echo "Running Rust CLI (health --help)..."; \
+		cd rust_production && cargo run --bin endkan -- health --help; \
 	fi
 
 # Run tests
 test: ## Run all tests
 	@echo "Running EndKan test suite..."
 	@lake exe test
-	@echo "Running comprehensive test suite..."
+	@echo "Running longer Lean smoke tests..."
 	@lake exe run_tests
-	@echo "Running production tests..."
+	@echo "Running demo benchmark / monitoring harness..."
 	@lake exe run_production_tests
 	@if command -v cargo >/dev/null 2>&1; then \
 		echo "Running Rust tests..."; \
@@ -62,7 +62,7 @@ build: ## Build the project
 	@echo "Building EndKan..."
 	@lake build
 	@if command -v cargo >/dev/null 2>&1; then \
-		echo "Building Rust production components..."; \
+		echo "Building Rust program..."; \
 		cd rust_production && cargo build --release; \
 	fi
 	@echo "✓ Build completed successfully"
@@ -110,18 +110,18 @@ install: build ## Install the package system-wide
 	@if command -v cargo >/dev/null 2>&1; then \
 		cd rust_production && cargo install --path .; \
 		echo "✓ EndKan CLI installed successfully"; \
-		echo "Run 'endkan-production --help' to get started"; \
+		echo "Run 'endkan health --help' for CLI options"; \
 	else \
-		echo "⚠ Rust/Cargo not found. Cannot install CLI components."; \
-		echo "Lean library can be used by adding to your Lakefile.lean:"; \
-		echo "require lean-endkan from git \"https://github.com/fraware/lean-endkan.git\""; \
+		echo "⚠ Rust/Cargo not found. Cannot install CLI."; \
+		echo "Lean library: add to Lakefile.lean, for example:"; \
+		echo "require «lean-endkan» from git \"https://github.com/fraware/lean-endkan.git\" @ \"main\""; \
 	fi
 
 # Uninstall the package
 uninstall: ## Uninstall the package
 	@echo "Uninstalling EndKan..."
 	@if command -v cargo >/dev/null 2>&1; then \
-		cargo uninstall endkan-production; \
+		cargo uninstall endkan; \
 		echo "✓ EndKan CLI uninstalled"; \
 	fi
 
@@ -134,7 +134,7 @@ docker-build: ## Build Docker image
 # Run Docker container
 docker-run: docker-build ## Run Docker container
 	@echo "Running EndKan in Docker..."
-	@docker run --rm endkan:latest --help
+	@docker run --rm endkan:latest health
 
 # Push Docker image to registry
 docker-push: docker-build ## Push Docker image to registry
@@ -147,17 +147,17 @@ docker-push: docker-build ## Push Docker image to registry
 release: test check ## Build and publish artifacts (supports dry-run)
 	@echo "Preparing release..."
 	@if [ "$(DRY_RUN)" = "true" ]; then \
-		echo "🧪 DRY RUN MODE - No actual publishing will occur"; \
+		echo "DRY RUN - no publishing"; \
 		echo "Would publish to:"; \
 		echo "  - crates.io (Rust package)"; \
 		echo "  - ghcr.io (Docker image)"; \
 		echo "  - GitHub Releases"; \
 	else \
-		echo "🚀 Publishing release..."; \
+		echo "Publishing release..."; \
 		$(MAKE) publish-cargo; \
 		$(MAKE) docker-push; \
 		$(MAKE) publish-github-release; \
-		echo "✅ Release published successfully!"; \
+		echo "Release published."; \
 	fi
 
 # Publish to crates.io
@@ -188,13 +188,13 @@ version: ## Show current version
 	@echo "  Git tag: $(shell git describe --tags --exact-match 2>/dev/null || echo 'No tag')"
 
 # Performance benchmarks
-benchmark: ## Run performance benchmarks
-	@echo "Running performance benchmarks..."
+benchmark: ## Run demo benchmark harness and Rust tests
+	@echo "Running demo benchmark harness..."
 	@lake exe run_production_tests
 	@if command -v cargo >/dev/null 2>&1; then \
-		cd rust_production && cargo bench; \
+		cd rust_production && cargo test --release; \
 	fi
-	@echo "✓ Benchmarks completed"
+	@echo "✓ Benchmark step finished"
 
 # Documentation generation
 docs: ## Generate documentation
@@ -204,7 +204,7 @@ docs: ## Generate documentation
 
 # Full development cycle
 full-test: clean build test check lint ## Run full test cycle
-	@echo "✅ Full test cycle completed successfully"
+	@echo "Full test cycle finished."
 
 # CI/CD helpers
 ci-test: ## Run tests suitable for CI
@@ -225,8 +225,8 @@ ci-build: ## Build suitable for CI
 
 # Quick start for new users
 quickstart: ## Quick start for new users
-	@echo "🚀 EndKan Quick Start"
-	@echo "==================="
+	@echo "EndKan quick start"
+	@echo "=================="
 	@echo ""
 	@echo "1. Clone the repository:"
 	@echo "   git clone https://github.com/fraware/lean-endkan.git"
@@ -246,6 +246,6 @@ quickstart: ## Quick start for new users
 	@echo ""
 	@echo "6. Or install as a package:"
 	@echo "   make install"
-	@echo "   endkan-production --help"
+	@echo "   endkan health --help"
 	@echo ""
-	@echo "📚 For more information, see README.md"
+	@echo "See README.md for more."

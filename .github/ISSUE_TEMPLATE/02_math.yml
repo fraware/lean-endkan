@@ -1,0 +1,18 @@
+name: Math / proof
+description: Correctness, missing lemmas, or category-theory design
+labels: [math]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Mathematical context
+      description: Statement, references, and how EndKan should behave.
+    validations:
+      required: true
+  - type: textarea
+    id: lean
+    attributes:
+      label: Lean status
+      description: Current formalization (sorry locations, Mathlib version, branch).
+    validations:
+      required: false

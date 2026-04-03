@@ -1,0 +1,29 @@
+# Lean / Lake
+.lake/
+lake-packages/
+build/
+*.olean
+*.ilean
+*.c
+*.trace
+
+# Rust
+rust_production/target/
+**/target/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Test / coverage outputs
+test-results-*
+coverage-*
+performance-report.json
+security-report.json
+quality-report.json

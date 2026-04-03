@@ -1,19 +1,18 @@
-//! EndKan Production Infrastructure
-//! 
-//! This crate provides high-performance production infrastructure for EndKan,
-//! including benchmarking, telemetry, monitoring, configuration management,
-//! and caching systems.
+//! Optional Rust companion for the EndKan Lean library.
+//!
+//! Offers a small command-line tool and in-memory demos: timing helpers, simple caches,
+//! and hooks intended for experiments next to the Lean project (not required to use the library).
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use serde::{Deserialize, Serialize};
 use tokio::time::interval;
 
 #[cfg(feature = "lean-ffi")]
 pub mod lean_ffi;
 
-/// Performance metrics for production monitoring
+/// Performance metrics used by demo monitoring code
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub execution_time_ms: u64,
@@ -61,7 +60,7 @@ pub struct TelemetryEvent {
     pub timestamp: u64,
 }
 
-/// Configuration for production systems
+/// Configuration bundle for the demo subsystems
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductionConfig {
     pub performance: PerformanceConfig,
@@ -113,14 +112,14 @@ pub struct CachingConfig {
 /// High-performance benchmarking system
 pub struct BenchmarkingSystem {
     metrics: Arc<Mutex<Vec<PerformanceMetrics>>>,
-    config: ProductionConfig,
+    _config: ProductionConfig,
 }
 
 impl BenchmarkingSystem {
     pub fn new(config: ProductionConfig) -> Self {
         Self {
             metrics: Arc::new(Mutex::new(Vec::new())),
-            config,
+            _config: config,
         }
     }
 
@@ -128,38 +127,38 @@ impl BenchmarkingSystem {
     pub fn record_metrics(&self, metrics: PerformanceMetrics) {
         let mut data = self.metrics.lock().unwrap();
         data.push(metrics);
-        
+
         // Keep only recent metrics to prevent memory growth
         if data.len() > 10000 {
             data.drain(0..1000);
         }
     }
 
-    /// Run comprehensive benchmark suite
+    /// Run the benchmark loop for `iterations` samples
     pub async fn run_benchmark_suite(&self, iterations: usize) -> StatisticalAnalysis {
         let mut results = Vec::new();
-        
+
         for _ in 0..iterations {
             let start = Instant::now();
-            
+
             // Simulate EndKan operations
             self.simulate_endkan_operation().await;
-            
+
             let duration = start.elapsed();
             let metrics = PerformanceMetrics {
                 execution_time_ms: duration.as_millis() as u64,
                 memory_usage_bytes: self.get_memory_usage(),
                 cpu_usage_percent: self.get_cpu_usage(),
                 cache_hit_rate: 0.85, // Simulated
-                error_rate: 0.02, // Simulated
+                error_rate: 0.02,     // Simulated
                 success_count: 1,
                 failure_count: 0,
                 timestamp: chrono::Utc::now().timestamp_millis() as u64,
             };
-            
+
             results.push(metrics.execution_time_ms as f64);
         }
-        
+
         self.calculate_statistics(&results)
     }
 
@@ -188,7 +187,8 @@ impl BenchmarkingSystem {
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
+        let variance =
+            data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
         let std_dev = variance.sqrt();
 
         let median = if data.len() % 2 == 0 {
@@ -215,7 +215,8 @@ impl BenchmarkingSystem {
         let lower_bound = q1 - 1.5 * iqr;
         let upper_bound = q3 + 1.5 * iqr;
 
-        let outliers: Vec<f64> = data.iter()
+        let outliers: Vec<f64> = data
+            .iter()
             .filter(|&&x| x < lower_bound || x > upper_bound)
             .cloned()
             .collect();
@@ -233,7 +234,11 @@ impl BenchmarkingSystem {
     }
 
     /// Detect performance regression
-    pub fn detect_regression(&self, baseline: &[PerformanceMetrics], current: &[PerformanceMetrics]) -> RegressionAnalysis {
+    pub fn detect_regression(
+        &self,
+        baseline: &[PerformanceMetrics],
+        current: &[PerformanceMetrics],
+    ) -> RegressionAnalysis {
         if baseline.is_empty() || current.is_empty() {
             return RegressionAnalysis {
                 has_regression: false,
@@ -244,8 +249,16 @@ impl BenchmarkingSystem {
             };
         }
 
-        let baseline_mean: f64 = baseline.iter().map(|m| m.execution_time_ms as f64).sum::<f64>() / baseline.len() as f64;
-        let current_mean: f64 = current.iter().map(|m| m.execution_time_ms as f64).sum::<f64>() / current.len() as f64;
+        let baseline_mean: f64 = baseline
+            .iter()
+            .map(|m| m.execution_time_ms as f64)
+            .sum::<f64>()
+            / baseline.len() as f64;
+        let current_mean: f64 = current
+            .iter()
+            .map(|m| m.execution_time_ms as f64)
+            .sum::<f64>()
+            / current.len() as f64;
         let performance_change = ((current_mean - baseline_mean) / baseline_mean) * 100.0;
 
         let has_regression = performance_change > 10.0; // 10% threshold
@@ -260,7 +273,10 @@ impl BenchmarkingSystem {
         };
 
         let recommendation = if has_regression {
-            format!("Performance regression detected: {:.1}% slower. Consider optimization.", performance_change)
+            format!(
+                "Performance regression detected: {:.1}% slower. Consider optimization.",
+                performance_change
+            )
         } else {
             format!("Performance is stable: {:.1}% change.", performance_change)
         };
@@ -333,7 +349,7 @@ impl TelemetrySystem {
     pub async fn start_background_task(&self) {
         let events = self.events.clone();
         let flush_interval = self.config.flush_interval_ms;
-        
+
         tokio::spawn(async move {
             let mut interval = interval(Duration::from_millis(flush_interval));
             loop {
@@ -386,13 +402,14 @@ impl CachingSystem {
         }
 
         let mut cache = self.cache.lock().unwrap();
-        
+
         // Evict old entries if cache is full
         if cache.len() >= self.config.max_size {
-            let oldest_key = cache.iter()
+            let oldest_key = cache
+                .iter()
                 .min_by_key(|(_, (_, timestamp))| timestamp)
                 .map(|(k, _)| k.clone());
-            
+
             if let Some(key_to_remove) = oldest_key {
                 cache.remove(&key_to_remove);
             }
@@ -455,7 +472,7 @@ impl MonitoringSystem {
     pub async fn start_health_monitoring(&self) {
         let health_status = self.health_status.clone();
         let interval_ms = self.config.health_check_interval_ms;
-        
+
         tokio::spawn(async move {
             let mut interval = interval(Duration::from_millis(interval_ms));
             loop {
@@ -468,7 +485,7 @@ impl MonitoringSystem {
     }
 }
 
-/// Main production system coordinator
+/// Demo coordinator: benchmarking, telemetry, cache, and monitoring stubs
 pub struct ProductionSystem {
     pub benchmarking: BenchmarkingSystem,
     pub telemetry: TelemetrySystem,
@@ -486,35 +503,37 @@ impl ProductionSystem {
         }
     }
 
-    /// Initialize all production systems
+    /// Start demo background tasks (telemetry tick, health stub)
     pub async fn initialize(&self) {
-        println!("Initializing EndKan production systems...");
-        
+        println!("Initializing EndKan demo subsystems...");
+
         // Start background tasks
         self.telemetry.start_background_task().await;
         self.monitoring.start_health_monitoring().await;
-        
-        println!("✓ Production systems initialized");
+
+        println!("✓ Demo subsystems initialized");
     }
 
-    /// Run comprehensive production test suite
+    /// Run the bundled demo test path (benchmarks, health string, report)
     pub async fn run_production_tests(&self) {
-        println!("Running EndKan production test suite...");
-        
+        println!("Running EndKan demo test suite...");
+
         // Run benchmarks
         let stats = self.benchmarking.run_benchmark_suite(1000).await;
-        println!("Benchmark Results: Mean={:.2}ms, P95={:.2}ms, StdDev={:.2}ms", 
-                 stats.mean, stats.p95, stats.std_dev);
-        
+        println!(
+            "Benchmark sample stats: Mean={:.2}ms, P95={:.2}ms, StdDev={:.2}ms",
+            stats.mean, stats.p95, stats.std_dev
+        );
+
         // Check health
         let health = self.monitoring.check_health().await;
-        println!("System Health: {}", health);
-        
+        println!("Health (demo): {}", health);
+
         // Generate report
         let report = self.monitoring.generate_report().await;
         println!("{}", report);
-        
-        println!("✓ Production test suite completed");
+
+        println!("✓ Demo test suite finished");
     }
 }
 

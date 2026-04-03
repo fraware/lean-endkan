@@ -1,11 +1,11 @@
-use endkan_production::*;
 use clap::{Parser, Subcommand};
+use endkan::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
 #[derive(Parser)]
-#[command(name = "endkan-production")]
-#[command(about = "EndKan Production Infrastructure")]
+#[command(name = "endkan")]
+#[command(about = "EndKan Rust helper: health checks, demo benchmarks, simple monitoring")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -13,9 +13,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run production test suite
+    /// Run demo test suite
     Test,
-    /// Start production monitoring
+    /// Poll demo monitoring output
     Monitor,
     /// Run benchmarks
     Benchmark {
@@ -36,7 +36,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let cli = Cli::parse();
 
-    // Create production configuration
     let config = ProductionConfig {
         performance: PerformanceConfig {
             timeout_ms: 5000,
@@ -69,33 +68,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     };
 
-    // Create production system
     let system = ProductionSystem::new(config);
     system.initialize().await;
 
     match cli.command {
         Commands::Test => {
-            println!("Running EndKan production test suite...");
+            println!("Running EndKan demo test suite...");
             system.run_production_tests().await;
         }
         Commands::Monitor => {
-            println!("Starting EndKan production monitoring...");
+            println!("Starting EndKan demo monitoring loop...");
             println!("Press Ctrl+C to stop");
-            
+
             loop {
                 let health = system.monitoring.check_health().await;
                 println!("Health check: {}", health);
-                
+
                 let (cache_size, hit_rate) = system.caching.get_stats();
-                println!("Cache: {} entries, {:.1}% hit rate", cache_size, hit_rate * 100.0);
-                
+                println!(
+                    "Cache: {} entries, {:.1}% hit rate",
+                    cache_size,
+                    hit_rate * 100.0
+                );
+
                 sleep(Duration::from_secs(5)).await;
             }
         }
         Commands::Benchmark { iterations } => {
-            println!("Running EndKan benchmarks with {} iterations...", iterations);
+            println!(
+                "Running EndKan benchmarks with {} iterations...",
+                iterations
+            );
             let stats = system.benchmarking.run_benchmark_suite(iterations).await;
-            
+
             println!("\nBenchmark Results:");
             println!("==================");
             println!("Mean execution time: {:.2}ms", stats.mean);
@@ -104,9 +109,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("P95 execution time: {:.2}ms", stats.p95);
             println!("P99 execution time: {:.2}ms", stats.p99);
             println!("Sample size: {}", stats.sample_size);
-            println!("95% Confidence interval: ({:.2}, {:.2})", 
-                     stats.confidence_interval_95.0, stats.confidence_interval_95.1);
-            
+            println!(
+                "95% Confidence interval: ({:.2}, {:.2})",
+                stats.confidence_interval_95.0, stats.confidence_interval_95.1
+            );
+
             if !stats.outliers.is_empty() {
                 println!("Outliers detected: {}", stats.outliers.len());
             }

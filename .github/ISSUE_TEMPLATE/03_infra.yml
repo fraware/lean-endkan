@@ -1,0 +1,17 @@
+name: Infrastructure
+description: CI, Rust CLI, Docker, packaging, or repo hygiene
+labels: [infrastructure]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Logs, workflow links, OS, and versions.
+    validations:
+      required: true

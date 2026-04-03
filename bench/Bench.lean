@@ -235,7 +235,7 @@ def calculateStats (data : List EndKanTelemetry) : IO (String × String × Strin
 
   return (p95Times, successRates, totalTests)
 
-/-- Run comprehensive benchmark suite -/
+/-- Run the full benchmark suite -/
 def runBenchmarkSuite : IO Unit := do
   IO.println "Running EndKan benchmark suite..."
   let data ← benchmarkAll 1000

@@ -22,7 +22,7 @@ open CategoryTheory
 open CategoryTheory.Limits
 open Lean Elab Tactic Meta
 
-/-- Comprehensive performance metrics for production benchmarking -/
+/-- Performance metrics used by the demo benchmark harness -/
 structure ProductionMetrics where
   -- Timing metrics
   executionTimeMs : Nat
@@ -248,7 +248,7 @@ def detectRegression (baseline : List ProductionMetrics) (current : List Product
       recommendation := recommendation
     }
 
-/-- Benchmark end β-reduction with comprehensive metrics -/
+/-- Benchmark end β-reduction -/
 def benchmarkEndBeta (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -275,7 +275,7 @@ def benchmarkEndBeta (iterations : Nat := 1000) : IO (List ProductionMetrics) :=
 
   return results
 
-/-- Benchmark coend β-reduction with comprehensive metrics -/
+/-- Benchmark coend β-reduction -/
 def benchmarkCoendBeta (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -302,7 +302,7 @@ def benchmarkCoendBeta (iterations : Nat := 1000) : IO (List ProductionMetrics) 
 
   return results
 
-/-- Benchmark Kan fusion with comprehensive metrics -/
+/-- Benchmark Kan fusion -/
 def benchmarkKanFusion (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -324,7 +324,7 @@ def benchmarkKanFusion (iterations : Nat := 1000) : IO (List ProductionMetrics) 
 
   return results
 
-/-- Benchmark Beck-Chevalley with comprehensive metrics -/
+/-- Benchmark Beck-Chevalley -/
 def benchmarkBeckChevalley (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -348,7 +348,7 @@ def benchmarkBeckChevalley (iterations : Nat := 1000) : IO (List ProductionMetri
 
   return results
 
-/-- Benchmark pattern matching with comprehensive metrics -/
+/-- Benchmark pattern matching -/
 def benchmarkPatternMatching (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -376,7 +376,7 @@ def benchmarkPatternMatching (iterations : Nat := 1000) : IO (List ProductionMet
 
   return results
 
-/-- Benchmark error handling with comprehensive metrics -/
+/-- Benchmark error handling -/
 def benchmarkErrorHandling (iterations : Nat := 1000) : IO (List ProductionMetrics) := do
   let config ← getBenchmarkConfig
   let mut results : List ProductionMetrics := []
@@ -404,10 +404,10 @@ def benchmarkErrorHandling (iterations : Nat := 1000) : IO (List ProductionMetri
 
   return results
 
-/-- Run comprehensive benchmark suite -/
+/-- Run the full demo benchmark suite -/
 def runComprehensiveBenchmarkSuite : IO Unit := do
   let config ← getBenchmarkConfig
-  IO.println "Running comprehensive EndKan benchmark suite..."
+  IO.println "Running EndKan demo benchmark suite..."
   IO.println s!"Configuration: {config.iterations} iterations, {config.warmupIterations} warmup"
   IO.println "=============================================="
 

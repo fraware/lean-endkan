@@ -80,8 +80,8 @@ def runAllTests : IO Unit := do
   IO.println "All tests completed successfully!"
   IO.println s!"Total execution time: {executionTime}ms"
 
-/-- Main function -/
-def main (args : List String) : IO Unit := do
-  runAllTests
-
 end EndKan.Test
+
+/-- Entry point for `lake exe test`. -/
+def main (_args : List String) : IO Unit := do
+  EndKan.Test.runAllTests

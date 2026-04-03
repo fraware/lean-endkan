@@ -272,7 +272,7 @@ def executeEndKanTactic (tacticName : String) : TacticM Unit := do
   if not success then
     throw (EndKanException s!"EndKan: All strategies failed for pattern {pattern}")
 
-/-- Enhanced tactic execution with comprehensive error handling -/
+/-- Tactic entry with extra error detail -/
 def executeEndKanTacticEnhanced (tacticName : String) : TacticM Unit := do
   let config ← endkanConfig.get
   let goal ← getMainGoal
@@ -361,7 +361,7 @@ elab "kan_fuse" : tactic => do
 elab "beck_chevalley!" : tactic => do
   executeEndKanTactic "beck_chevalley!"
 
-/-- Enhanced tactics with comprehensive error handling -/
+/-- Tactics with extra error detail -/
 elab "end_beta!" : tactic => do
   executeEndKanTacticEnhanced "end_beta!"
 
