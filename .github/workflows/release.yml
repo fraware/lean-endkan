@@ -34,7 +34,7 @@ jobs:
           cp rust_production/target/release/endkan endkan-linux-x86_64
           chmod +x endkan-linux-x86_64
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: endkan-linux-x86_64
         env:
