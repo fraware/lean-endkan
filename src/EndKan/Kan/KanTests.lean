@@ -14,6 +14,7 @@ import EndKan.Coend.Core
 import EndKan.Coend.BetaEta
 import EndKan.Kan.Core
 import EndKan.Kan.BeckChevalley
+import EndKan.Kan.BeckChevalley.Hypotheses
 import EndKan.Tactics
 
 namespace EndKan.Tests.KanTests
@@ -46,6 +47,12 @@ theorem testDensityYoneda (F : C ⥤ D) :
   endkan_eta
   kan_fuse
   simp
+
+/-- Test Beck-Chevalley on the reflexive square (requires `[BeckChevalley S]`). -/
+theorem testBeckChevalleyReflSquare (K : C ⥤ D) (M : D ⥤ F) [IsEquivalence K]
+    [BeckChevalley (BeckChevalley.reflSquare K M)] :
+    IsIso (BeckChevalley.beckChevalleyCompare (BeckChevalley.reflSquare K M) (𝟭 F)) := by
+  exact BeckChevalley.beckChevalleyIso (BeckChevalley.reflSquare K M) (𝟭 F)
 
 /-- Test Beck-Chevalley on simple pullback square -/
 theorem testBeckChevalleyPullback (K : C ⥤ D) (L : C ⥤ E) (M : D ⥤ F) (N : E ⥤ F)
