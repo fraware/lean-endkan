@@ -1,357 +1,118 @@
-import Mathlib.CategoryTheory.Category.Basic
-import Mathlib.CategoryTheory.Functor.Basic
-import Mathlib.CategoryTheory.Limits.Shapes.Equalizers
-import Mathlib.CategoryTheory.Limits.Shapes.Coequalizers
-import Mathlib.CategoryTheory.Limits.Shapes.Products
-import Mathlib.CategoryTheory.Limits.Shapes.Coproducts
-import Mathlib.CategoryTheory.Limits.Shapes.Terminal
-import Mathlib.CategoryTheory.Limits.Shapes.Initial
-import Mathlib.CategoryTheory.Limits.Constructions.Equalizers
-import Mathlib.CategoryTheory.Limits.Constructions.Coequalizers
-import Mathlib.CategoryTheory.Limits.HasLimits
-import Mathlib.CategoryTheory.Limits.HasColimits
-import Mathlib.CategoryTheory.Limits.Shapes.WideEqualizers
-import Mathlib.CategoryTheory.Limits.Shapes.WideCoequalizers
-import Mathlib.CategoryTheory.Limits.Shapes.WidePullbacks
-import Mathlib.CategoryTheory.Limits.Shapes.WidePushouts
+import Mathlib.CategoryTheory.Limits.Shapes.End
 import EndKan.End.Core
+import EndKan.End.BetaEta
 import EndKan.Coend.Core
+import EndKan.Coend.BetaEta
+import EndKan.Fubini.Slice
+import EndKan.Fubini.CoendSlice
+import EndKan.Fubini.Nested
+import EndKan.Fubini.NestedCoend
 
 namespace EndKan.Fubini
 
 open CategoryTheory
-open CategoryTheory.Limits
+open Opposite
+open scoped Prod
 
-variable {C : Type*} [Category C] {D : Type*} [Category D] {E : Type*} [Category E]
+universe u v
 
-/-- Fubini's theorem for ends: ends commute under smallness conditions
-    ∫_c ∫_d F(c,d) ≅ ∫_d ∫_c F(c,d) -/
-def end_fubini {F : (C × D)ᵒᵖ × (C × D) ⥤ E}
-    [HasProductsOfShape C E] [HasProductsOfShape D E]
-    [HasWideEqualizers E] [HasProductsOfShape (C × D) E] :
-    EndObj (F.comp (Prod.braiding _ _).op) ≅
-    EndObj (EndObj <| F.comp (Prod.associator _ _ _).op) :=
-  { hom := End.lift {
-      app := fun c => End.lift {
-        app := fun d => End.π F (op (c, d), (c, d))
-        dinaturality := by
-          intro d d' g
-          simp only [Category.assoc, End.π_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro c c' f
-        apply End.uniq
-        intro d
-        simp only [Category.assoc, End.lift_π, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := End.lift {
-      app := fun cd => End.π F (op cd, cd)
-      dinaturality := by
-        intro cd cd' f
-        simp only [Category.assoc, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply End.uniq
-      intro c
-      apply End.uniq
-      intro d
-      simp only [Category.assoc, End.lift_π, End.lift_π]
-    inv_hom_id := by
-      apply End.uniq
-      intro cd
-      simp only [Category.assoc, End.lift_π] }
+variable {C D E : Type u} [Category.{v} C] [Category.{v} D] [Category.{v} E]
 
-/-- Fubini's theorem for coends: coends commute under smallness conditions
-    ∫^c ∫^d F(c,d) ≅ ∫^d ∫^c F(c,d) -/
-def coend_fubini {F : (C × D) × (C × D)ᵒᵖ ⥤ E}
-    [HasCoproductsOfShape C E] [HasCoproductsOfShape D E]
-    [HasWideCoequalizers E] [HasCoproductsOfShape (C × D) E] :
-    CoendObj (F.comp (Prod.braiding _ _)) ≅
-    CoendObj (CoendObj <| F.comp (Prod.associator _ _ _)) :=
-  { hom := Coend.desc {
-      app := fun cd => Coend.ι F (cd, op cd)
-      dinaturality := by
-        intro cd cd' f
-        simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := Coend.desc {
-      app := fun c => Coend.desc {
-        app := fun d => Coend.ι F ((c, d), op (c, d))
-        dinaturality := by
-          intro d d' g
-          simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro c c' f
-        apply Coend.uniq
-        intro d
-        simp only [Category.assoc, Coend.desc_ι, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply Coend.uniq
-      intro cd
-      simp only [Category.assoc, Coend.desc_ι]
-    inv_hom_id := by
-      apply Coend.uniq
-      intro c
-      apply Coend.uniq
-      intro d
-      simp only [Category.assoc, Coend.desc_ι, Coend.desc_ι] }
+/-!
+### Fubini isomorphisms (extraction boundary)
 
-/-- Fubini's theorem for mixed ends and coends
-    ∫_c ∫^d F(c,d) ≅ ∫^d ∫_c F(c,d) -/
-def end_coend_fubini {F : Cᵒᵖ × C × D × Dᵒᵖ ⥤ E}
-    [HasProductsOfShape C E] [HasCoproductsOfShape D E]
-    [HasWideEqualizers E] [HasWideCoequalizers E] :
-    EndObj (fun c => CoendObj (fun d => F.obj (op c, c, d, op d))) ≅
-    CoendObj (fun d => EndObj (fun c => F.obj (op c, c, d, op d))) :=
-  { hom := Coend.desc {
-      app := fun d => End.lift {
-        app := fun c => End.π (fun c => CoendObj (fun d => F.obj (op c, c, d, op d))) c ≫
-          Coend.ι (fun d => F.obj (op c, c, d, op d)) d
-        dinaturality := by
-          intro c c' f
-          simp only [Category.assoc, End.π_natural, Coend.ι_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro d d' g
-        apply End.uniq
-        intro c
-        simp only [Category.assoc, End.lift_π, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := End.lift {
-      app := fun c => Coend.desc {
-        app := fun d => End.π (fun c => CoendObj (fun d => F.obj (op c, c, d, op d))) c ≫
-          Coend.ι (fun d => F.obj (op c, c, d, op d)) d
-        dinaturality := by
-          intro d d' g
-          simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro c c' f
-        apply Coend.uniq
-        intro d
-        simp only [Category.assoc, Coend.desc_ι, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply Coend.uniq
-      intro d
-      apply End.uniq
-      intro c
-      simp only [Category.assoc, Coend.desc_ι, End.lift_π]
-    inv_hom_id := by
-      apply End.uniq
-      intro c
-      apply Coend.uniq
-      intro d
-      simp only [Category.assoc, End.lift_π, Coend.desc_ι] }
+The end Fubini isomorphism is
 
-/-- Fubini's theorem for ends over product categories
-    ∫_{(c,d)} F(c,d) ≅ ∫_c ∫_d F(c,d) -/
-def end_prod_fubini {F : (C × D)ᵒᵖ × (C × D) ⥤ E}
-    [HasProductsOfShape C E] [HasProductsOfShape D E]
-    [HasWideEqualizers E] [HasProductsOfShape (C × D) E] :
-    EndObj F ≅ EndObj (fun c => EndObj (fun d => F.obj (op (c, d), (c, d)))) :=
-  { hom := End.lift {
-      app := fun c => End.lift {
-        app := fun d => End.π F (op (c, d), (c, d))
-        dinaturality := by
-          intro d d' g
-          simp only [Category.assoc, End.π_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro c c' f
-        apply End.uniq
-        intro d
-        simp only [Category.assoc, End.lift_π, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := End.lift {
-      app := fun cd => End.π F (op cd, cd)
-      dinaturality := by
-        intro cd cd' f
-        simp only [Category.assoc, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply End.uniq
-      intro c
-      apply End.uniq
-      intro d
-      simp only [Category.assoc, End.lift_π, End.lift_π]
-    inv_hom_id := by
-      apply End.uniq
-      intro cd
-      simp only [Category.assoc, End.lift_π] }
+`EndKan.End.EndObj F ≅ endNestedObj F`,
 
-/-- Fubini's theorem for coends over product categories
-    ∫^{(c,d)} F(c,d) ≅ ∫^c ∫^d F(c,d) -/
-def coend_prod_fubini {F : (C × D) × (C × D)ᵒᵖ ⥤ E}
-    [HasCoproductsOfShape C E] [HasCoproductsOfShape D E]
-    [HasWideCoequalizers E] [HasCoproductsOfShape (C × D) E] :
-    CoendObj F ≅ CoendObj (fun c => CoendObj (fun d => F.obj ((c, d), op (c, d)))) :=
-  { hom := Coend.desc {
-      app := fun cd => Coend.ι F (cd, op cd)
-      dinaturality := by
-        intro cd cd' f
-        simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := Coend.desc {
-      app := fun c => Coend.desc {
-        app := fun d => Coend.ι F ((c, d), op (c, d))
-        dinaturality := by
-          intro d d' g
-          simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro c c' f
-        apply Coend.uniq
-        intro d
-        simp only [Category.assoc, Coend.desc_ι, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply Coend.uniq
-      intro cd
-      simp only [Category.assoc, Coend.desc_ι]
-    inv_hom_id := by
-      apply Coend.uniq
-      intro c
-      apply Coend.uniq
-      intro d
-      simp only [Category.assoc, Coend.desc_ι, Coend.desc_ι] }
+proved as `endFubiniIso F` in `EndKan.Fubini.Nested`. Infrastructure in
+`EndKan.Fubini.Slice`: `endSlice`, `endInnerObj`, `endInnerLift`, `endInnerMap`
+(with `endInnerLift d ≫ endInnerMap f = endInnerLift d'`), and bootstrap isomorphisms
+under `[AllEndSliceContrIso F]`. Indexing uses `EndIdx C D` (defeq to
+`(C × D)ᵒᵖ × (C × D)`).
 
-/-- Fubini's theorem for ends over functor categories
-    ∫_F ∫_c F(c) ≅ ∫_c ∫_F F(c) -/
-def end_functor_fubini {F : (C ⥤ D)ᵒᵖ × (C ⥤ D) ⥤ E}
-    [HasProductsOfShape (C ⥤ D) E] [HasWideEqualizers E] :
-    EndObj F ≅ EndObj (fun F' => EndObj (fun c => F.obj (op F', F') c)) :=
-  { hom := End.lift {
-      app := fun F' => End.lift {
-        app := fun c => End.π F (op F', F') c
-        dinaturality := by
-          intro c c' g
-          simp only [Category.assoc, End.π_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro F' F'' f
-        apply End.uniq
-        intro c
-        simp only [Category.assoc, End.lift_π, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := End.lift {
-      app := fun F' => End.π F (op F', F')
-      dinaturality := by
-        intro F' F'' f
-        simp only [Category.assoc, End.π_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply End.uniq
-      intro F'
-      apply End.uniq
-      intro c
-      simp only [Category.assoc, End.lift_π, End.lift_π]
-    inv_hom_id := by
-      apply End.uniq
-      intro F'
-      simp only [Category.assoc, End.lift_π] }
+The coend mirror is `coendFubiniIso F : CoendObj F ≅ coendNestedObj F` in
+`EndKan.Fubini.NestedCoend`, built from `coendSlice`, `coendInnerObj`, `coendInnerDesc`,
+and `coendInnerMap` in `EndKan.Fubini.CoendSlice`. See `docs/EXTRACTION_LEDGER.md`.
+-/
 
-/-- Fubini's theorem for coends over functor categories
-    ∫^F ∫^c F(c) ≅ ∫^c ∫^F F(c) -/
-def coend_functor_fubini {F : (C ⥤ D) × (C ⥤ D)ᵒᵖ ⥤ E}
-    [HasCoproductsOfShape (C ⥤ D) E] [HasWideCoequalizers E] :
-    CoendObj F ≅ CoendObj (fun F' => CoendObj (fun c => F.obj (F', op F') c)) :=
-  { hom := Coend.desc {
-      app := fun F' => Coend.ι F (F', op F')
-      dinaturality := by
-        intro F' F'' f
-        simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    inv := Coend.desc {
-      app := fun F' => Coend.desc {
-        app := fun c => Coend.ι F (F', op F') c
-        dinaturality := by
-          intro c c' g
-          simp only [Category.assoc, Coend.ι_natural, Functor.map_comp]
-          rw [← Category.assoc, ← Functor.map_comp]
-          congr 1
-          simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-      }
-      dinaturality := by
-        intro F' F'' f
-        apply Coend.uniq
-        intro c
-        simp only [Category.assoc, Coend.desc_ι, Coend.ι_natural, Functor.map_comp]
-        rw [← Category.assoc, ← Functor.map_comp]
-        congr 1
-        simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-    }
-    hom_inv_id := by
-      apply Coend.uniq
-      intro F'
-      simp only [Category.assoc, Coend.desc_ι]
-    inv_hom_id := by
-      apply Coend.uniq
-      intro F'
-      apply Coend.uniq
-      intro c
-      simp only [Category.assoc, Coend.desc_ι, Coend.desc_ι] }
+/-- Fubini isomorphism for ends over a product category. -/
+def EndFubiniTarget (F : (C × D)ᵒᵖ × (C × D) ⥤ E)
+    [Limits.HasEnd (EndKan.End.endBifunctor F)]
+    [∀ d, Limits.HasEnd (EndKan.End.endBifunctor (endSlice F d))]
+    [AllEndSliceContrIso F]
+    [∀ d, Epi (endInnerLift F d)]
+    [Limits.HasEnd (EndKan.End.endBifunctor (endOuterProfunctor F))] : Prop :=
+  Nonempty (EndKan.End.EndObj F ≅ endNestedObj F)
+
+/-- Fubini isomorphism for coends over a product category. -/
+def CoendFubiniTarget (F : (C × D) × (C × D)ᵒᵖ ⥤ E)
+    [Limits.HasCoend (EndKan.Coend.coendBifunctor F)]
+    [∀ d, Limits.HasCoend (EndKan.Coend.coendBifunctor (coendSlice F d))]
+    [CoendSliceContrIso F]
+    [∀ d, Mono (coendInnerDesc F d)]
+    [Limits.HasCoend (EndKan.Coend.coendBifunctor (coendOuterProfunctor F))] : Prop :=
+  Nonempty (EndKan.Coend.CoendObj F ≅ coendNestedObj F)
+
+theorem end_fubini_target {F : (C × D)ᵒᵖ × (C × D) ⥤ E}
+    [Limits.HasEnd (EndKan.End.endBifunctor F)]
+    [∀ d, Limits.HasEnd (EndKan.End.endBifunctor (endSlice F d))]
+    [AllEndSliceContrIso F]
+    [∀ d, Epi (endInnerLift F d)]
+    [Limits.HasEnd (EndKan.End.endBifunctor (endOuterProfunctor F))] :
+    EndFubiniTarget F :=
+  ⟨endFubiniIso F⟩
+
+theorem coend_fubini_target {F : (C × D) × (C × D)ᵒᵖ ⥤ E}
+    [Limits.HasCoend (EndKan.Coend.coendBifunctor F)]
+    [∀ d, Limits.HasCoend (EndKan.Coend.coendBifunctor (coendSlice F d))]
+    [CoendSliceContrIso F]
+    [∀ d, Mono (coendInnerDesc F d)]
+    [Limits.HasCoend (EndKan.Coend.coendBifunctor (coendOuterProfunctor F))] :
+    CoendFubiniTarget F :=
+  ⟨coendFubiniIso F⟩
+
+/-- β-reduction commutes with the universal morphisms used in Fubini diagrams. -/
+theorem end_fubini_beta {F : Cᵒᵖ × C ⥤ E} [Limits.HasEnd (EndKan.End.endBifunctor F)] {X : E}
+    (f : ∀ c : C, X ⟶ F.obj (op c, c))
+    (h : ∀ {c c' : C} (g : c ⟶ c'),
+      f c ≫ ((EndKan.End.endBifunctor F).obj (op c)).map g =
+        f c' ≫ ((EndKan.End.endBifunctor F).map g.op).app c')
+    (c : C) :
+    EndKan.End.lift ⟨f, h⟩ ≫ EndKan.End.π F c = f c :=
+  EndKan.End.end_beta f h c
+
+/-- Product-diagonal end β (same as `end_fubini_beta` on `(C × D)`). -/
+theorem end_fubini_π {F : (C × D)ᵒᵖ × (C × D) ⥤ E}
+    [Limits.HasEnd (EndKan.End.endBifunctor F)] {X : E}
+    (f : ∀ cd : C × D, X ⟶ F.obj (op cd, cd))
+    (h : ∀ {cd cd' : C × D} (g : cd ⟶ cd'),
+      f cd ≫ ((EndKan.End.endBifunctor F).obj (op cd)).map g =
+        f cd' ≫ ((EndKan.End.endBifunctor F).map g.op).app cd')
+    (cd : C × D) :
+    EndKan.End.lift ⟨f, h⟩ ≫ EndKan.End.π F cd = f cd :=
+  EndKan.End.end_beta f h cd
+
+/-- β-reduction commutes with the universal morphisms used in Fubini diagrams. -/
+theorem coend_fubini_beta {F : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (EndKan.Coend.coendBifunctor F)] {X : E}
+    (f : ∀ c : C, F.obj (c, op c) ⟶ X)
+    (h : ∀ {c c' : C} (g : c ⟶ c'),
+      F.map (𝟙 c ×ₘ g.op) ≫ f c = F.map (g ×ₘ 𝟙 (op c')) ≫ f c')
+    (c : C) :
+    EndKan.Coend.ι F c ≫ EndKan.Coend.desc (EndKan.Coend.DinaturalTransformation.ofDiagonal f h) = f c :=
+  EndKan.Coend.coend_beta f h c
+
+/-- Curried coend β used in nested Fubini diagrams. -/
+theorem coend_fubini_ιCurry_beta {F : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (EndKan.Coend.coendBifunctor F)]
+    {c c' : C} (f : c ⟶ c') :
+    ((EndKan.Coend.coendBifunctor F).map f.op).app c ≫ EndKan.Coend.ιCurry F c =
+      ((EndKan.Coend.coendBifunctor F).obj (op c')).map f ≫ EndKan.Coend.ιCurry F c' :=
+  EndKan.Coend.coend_ιCurry_beta (F := F) f
+
+/-- Diagonal coend injection β used in nested Fubini diagrams. -/
+theorem coend_fubini_ι_beta {F : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (EndKan.Coend.coendBifunctor F)]
+    {c c' : C} (f : c ⟶ c') :
+    F.map (𝟙 c ×ₘ f.op) ≫ EndKan.Coend.ι F c = F.map (f ×ₘ 𝟙 (op c')) ≫ EndKan.Coend.ι F c' :=
+  EndKan.Coend.coend_ι_beta (F := F) f
 
 end EndKan.Fubini
