@@ -1,4 +1,10 @@
-import EndKan.Core
+import EndKan.End.Core
+import EndKan.End.BetaEta
+import EndKan.Coend.Core
+import EndKan.Coend.BetaEta
+import EndKan.Fubini
+import EndKan.Kan.Core
+import EndKan.Kan.BeckChevalley
 
 /-!
 # EndKan

@@ -14,15 +14,10 @@ lean_lib «EndKan» where
 lean_lib «EndKan.Automation» where
   roots := #[`EndKan.Automation]
 
+lean_lib «EndKan.Experimental» where
+  roots := #[`EndKan.Experimental]
+
 lean_lib «EndKan.ProductionBenchmarks» where
-
-lean_lib «EndKan.Telemetry» where
-
-lean_lib «EndKan.Optimization» where
-
-lean_lib «EndKan.Configuration» where
-
-lean_lib «EndKan.Monitoring» where
 
 lean_exe «test» where
   root := `Test
