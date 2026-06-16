@@ -37,4 +37,4 @@ lean_exe «test-runner» where
   supportInterpreter := true
 
 lean_lib Scratch where
-  roots := #[`Scratch.SliceIsoMin]
+  roots := #[`Scratch.SliceIsoMin, `Scratch.MathlibEndBetaExamples]
