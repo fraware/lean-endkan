@@ -1,153 +1,129 @@
-import Mathlib.CategoryTheory.Category.Basic
-import Mathlib.CategoryTheory.Functor.Basic
-import Mathlib.CategoryTheory.Limits.Shapes.Equalizers
-import Mathlib.CategoryTheory.Limits.Shapes.Products
-import Mathlib.CategoryTheory.Limits.Shapes.Terminal
-import Mathlib.CategoryTheory.Limits.Constructions.Equalizers
-import Mathlib.CategoryTheory.Limits.Constructions.Products
-import Mathlib.CategoryTheory.Limits.HasLimits
-import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
-import Mathlib.CategoryTheory.Limits.Shapes.WidePullbacks
-import Mathlib.CategoryTheory.Limits.Shapes.WideEqualizers
+import Mathlib.CategoryTheory.Limits.Shapes.End
+import Mathlib.CategoryTheory.Functor.Currying
+import Mathlib.CategoryTheory.Products.Basic
+import Mathlib.CategoryTheory.Opposites
 
 namespace EndKan.End
 
 open CategoryTheory
-open CategoryTheory.Limits
+open CategoryTheory.Functor
+open Opposite
+open scoped Prod
 
-variable {C : Type*} [Category C] {D : Type*} [Category D]
+universe u v
 
-/-- A dinatural transformation from X to F is a family of morphisms
-    ω_c : X ⟶ F(c,c) such that for any f : c ⟶ c', we have
-    ω_c ≫ F.map (f, 𝟙 c') = ω_{c'} ≫ F.map (𝟙 c, f) -/
+variable {C : Type u} [Category.{v} C] {D : Type u} [Category.{v} D]
+
+/-- The curried form of a functor `Cᵒᵖ × C ⥤ D`, as used by Mathlib's `end_`. -/
+abbrev endBifunctor (F : Cᵒᵖ × C ⥤ D) : Cᵒᵖ ⥤ C ⥤ D :=
+  curry.obj F
+
+@[simp]
+theorem endBifunctor_obj_map {F : Cᵒᵖ × C ⥤ D} (c : C) (f : c ⟶ c') :
+    ((endBifunctor F).obj (op c)).map f = F.map (𝟙 (op c) ×ₘ f) := by
+  simp [endBifunctor]
+
+@[simp]
+theorem endBifunctor_map_app {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c ⟶ c') :
+    ((endBifunctor F).map f.op).app c' = F.map (f.op ×ₘ 𝟙 c') := by
+  simp [endBifunctor]
+
+@[simp]
+theorem endBifunctor_obj_obj {F : Cᵒᵖ × C ⥤ D} (c : C) :
+    ((endBifunctor F).obj (op c)).obj c = F.obj (op c, c) := by
+  simp [endBifunctor]
+
+@[simp]
+theorem endBifunctor_fiber_obj {F : Cᵒᵖ × C ⥤ D} (c c' : C) :
+    ((endBifunctor F).obj (op c)).obj c' = F.obj (op c, c') := by
+  simp [endBifunctor]
+
+theorem post_comp_endBifunctor_map {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c ⟶ c')
+    {X : D} (h : X ⟶ F.obj (op c, c)) :
+    h ≫ ((endBifunctor F).obj (op c)).map f = h ≫ F.map (𝟙 (op c) ×ₘ f) := by
+  conv_rhs => rw [← endBifunctor_obj_map]
+  rfl
+
+/-- A dinatural transformation from `X` into `F`, expressed via the curried bifunctor. -/
 structure DinaturalTransformation (X : D) (F : Cᵒᵖ × C ⥤ D) where
   app : ∀ c : C, X ⟶ F.obj (op c, c)
   dinaturality : ∀ {c c' : C} (f : c ⟶ c'),
-    app c ≫ F.map (op f, 𝟙 c') = app c' ≫ F.map (𝟙 c, f)
+    app c ≫ ((endBifunctor F).obj (op c)).map f =
+      app c' ≫ ((endBifunctor F).map f.op).app c'
 
-/-- The end of a functor F : Cᵒᵖ × C ⥤ D is the equalizer of two morphisms
-    from ∏_{c} F(c,c) to ∏_{f : c ⟶ c'} F(c,c') -/
-def EndObj (F : Cᵒᵖ × C ⥤ D) [HasProductsOfShape C D] [HasWideEqualizers D] : D :=
-  wideEqualizer
-    (Pi.lift fun c => F.map (𝟙 c, 𝟙 c))
-    (Pi.lift fun f : Σ c c' : C, c ⟶ c' => F.map (op f.2.1, f.2.2))
+/-- The end of `F`, defined via Mathlib's `CategoryTheory.Limits.end_`. -/
+noncomputable def EndObj (F : Cᵒᵖ × C ⥤ D) [Limits.HasEnd (endBifunctor F)] : D :=
+  Limits.end_ (endBifunctor F)
 
-/-- The projection from the end to F(c,c) -/
-def End.π (F : Cᵒᵖ × C ⥤ D) [HasProductsOfShape C D] [HasWideEqualizers D] (c : C) :
-  EndObj F ⟶ F.obj (op c, c) :=
-  wideEqualizer.ι _ _ ≫ Pi.π _ c
+/-- Projection from the end to the diagonal object `F(c, c)`. -/
+noncomputable def π (F : Cᵒᵖ × C ⥤ D) [Limits.HasEnd (endBifunctor F)] (c : C) :
+    EndObj F ⟶ F.obj (op c, c) := by
+  simpa [EndObj, endBifunctor] using Limits.end_.π (endBifunctor F) c
 
-/-- The end projections form a dinatural transformation -/
-def End.dinatural (F : Cᵒᵖ × C ⥤ D) [HasProductsOfShape C D] [HasWideEqualizers D] :
-  DinaturalTransformation (EndObj F) F where
-  app := End.π F
+/-- The end projections form a dinatural transformation. -/
+noncomputable def dinatural (F : Cᵒᵖ × C ⥤ D) [Limits.HasEnd (endBifunctor F)] :
+    DinaturalTransformation (EndObj F) F where
+  app := π F
   dinaturality := by
     intro c c' f
-    apply wideEqualizer.hom_ext
-    ext ⟨c₁, c₂, g⟩
-    simp only [Category.assoc, wideEqualizer.condition, Pi.lift_π]
-    congr 1
-    simp only [Functor.map_comp, Category.assoc]
-    rw [← F.map_comp]
-    congr 1
-    simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
+    dsimp [π]
+    exact Limits.end_.condition (endBifunctor F) f
 
-/-- Universal property of ends: any dinatural transformation factors uniquely through the end -/
-def End.lift {F : Cᵒᵖ × C ⥤ D} [HasProductsOfShape C D] [HasWideEqualizers D]
+/-- Universal property of ends. -/
+noncomputable def lift {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
     {X : D} (ω : DinaturalTransformation X F) : X ⟶ EndObj F :=
-  wideEqualizer.lift (Pi.lift ω.app) (by
-    ext ⟨c, c', f⟩
-    simp only [Pi.lift_π, Category.assoc]
-    rw [ω.dinaturality])
+  Limits.end_.lift (fun c => ω.app c) (fun _ _ f => ω.dinaturality (f := f))
 
-/-- The lifted morphism commutes with projections -/
-theorem End.lift_π {F : Cᵒᵖ × C ⥤ D} [HasProductsOfShape C D] [HasWideEqualizers D]
+@[reassoc (attr := simp)]
+theorem lift_π {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
     {X : D} (ω : DinaturalTransformation X F) (c : C) :
-    End.lift ω ≫ End.π F c = ω.app c := by
-  simp only [End.lift, End.π, Category.assoc, wideEqualizer.lift_ι, Pi.lift_π]
+    lift ω ≫ π F c = ω.app c := by
+  dsimp [lift, π, EndObj]
+  exact Limits.end_.lift_π (F := endBifunctor F) _ _ c
 
-/-- Uniqueness of the lifted morphism -/
-theorem End.uniq {F : Cᵒᵖ × C ⥤ D} [HasProductsOfShape C D] [HasWideEqualizers D]
+theorem uniq {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
     {X : D} (f g : X ⟶ EndObj F)
-    (h : ∀ c : C, f ≫ End.π F c = g ≫ End.π F c) : f = g := by
-  apply wideEqualizer.hom_ext
-  ext c
-  simp only [Category.assoc, wideEqualizer.condition, Pi.lift_π] at h
-  exact h c
+    (h : ∀ c : C, f ≫ π F c = g ≫ π F c) : f = g := by
+  simpa [EndObj, endBifunctor] using Limits.end_.hom_ext (f := f) (g := g) h
 
-/-- The end as a limit -/
-def End.asLimit (F : Cᵒᵖ × C ⥤ D) [HasProductsOfShape C D] [HasWideEqualizers D] :
-  LimitCone (Discrete.functor fun c => F.obj (op c, c)) where
-  cone := {
-    pt := EndObj F
-    π := Discrete.natTrans fun c => End.π F c.as
-  }
-  isLimit := {
-    lift := fun s => End.lift {
-      app := fun c => s.π.app ⟨c⟩
-      dinaturality := by
-        intro c c' g
-        have h := s.π.naturality ⟨g⟩
-        simp only [Discrete.functor_map, Discrete.natTrans_app] at h
-        exact h
-    }
-    fac := by
-      intro s c
-      simp only [End.lift_π]
-    uniq := by
-      intro s f h
-      apply End.uniq
-      intro c
-      exact h ⟨c⟩
-  }
+/-- A dinatural transformation from `F` into `X` (cowedge data; mirrors `Limits.Cowedge`). -/
+structure Cowedge (F : Cᵒᵖ × C ⥤ D) (X : D) where
+  app : ∀ c : C, F.obj (op c, c) ⟶ X
+  dinaturality : ∀ {c c' : C} (f : c ⟶ c'),
+    ((endBifunctor F).map f.op).app c ≫ app c =
+      ((endBifunctor F).obj (op c')).map f ≫ app c'
 
-/-- Ends are preserved by functors -/
-def End.map {F G : Cᵒᵖ × C ⥤ D} [HasProductsOfShape C D] [HasWideEqualizers D]
-    (α : F ⟶ G) : EndObj F ⟶ EndObj G :=
-  End.lift {
-    app := fun c => End.π F c ≫ α.app (op c, c)
-    dinaturality := by
-      intro c c' f
-      simp only [Category.assoc, α.naturality]
-      rw [← Category.assoc, End.dinatural.dinaturality, Category.assoc]
-      congr 1
-      simp only [Functor.map_comp, Category.assoc]
-      rw [← α.naturality]
-      simp only [op_comp, op_id, Category.id_comp, Category.comp_id]
-  }
+/-- Morphisms `EndObj F ⟶ X` are determined by precomposition with every `Y ⟶ EndObj F`
+    (Yoneda / covariant hom). Dual to `uniq` for maps into the end. -/
+theorem post_ext {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
+    {X : D} {f g : EndObj F ⟶ X}
+    (h : ∀ (Y : D) (y : Y ⟶ EndObj F), y ≫ f = y ≫ g) : f = g := by
+  simpa using h (EndObj F) (𝟙 _)
 
-/-- Naturality of End.map -/
-theorem End.map_π {F G : Cᵒᵖ × C ⥤ D} [HasProductsOfShape C D] [HasWideEqualizers D]
-    (α : F ⟶ G) (c : C) :
-    End.map α ≫ End.π G c = End.π F c ≫ α.app (op c, c) := by
-  simp only [End.map, End.lift_π]
+/-- Alias for `post_ext` (maps from the end). -/
+theorem post_uniq {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
+    {X : D} {f g : EndObj F ⟶ X}
+    (h : ∀ (Y : D) (y : Y ⟶ EndObj F), y ≫ f = y ≫ g) : f = g :=
+  post_ext h
 
-/-- Ends of constant functors -/
-def End.const (X : D) [HasProductsOfShape C D] [HasWideEqualizers D] :
-  EndObj (Functor.const (Cᵒᵖ × C) X) ≅ X :=
-  { hom := End.lift {
-      app := fun _ => 𝟙 X
-      dinaturality := by simp
-    }
-    inv := End.π (Functor.const (Cᵒᵖ × C) X) (Classical.arbitrary C)
-    hom_inv_id := by
-      apply End.uniq
-      intro c
-      simp only [Category.assoc, End.lift_π, Category.id_comp]
-    inv_hom_id := by simp }
+@[reassoc (attr := simp)]
+theorem π_natural {F : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
+    {c c' : C} (f : c ⟶ c') :
+    π F c ≫ ((endBifunctor F).obj (op c)).map f =
+      π F c' ≫ ((endBifunctor F).map f.op).app c' := by
+  dsimp [π]
+  exact Limits.end_.condition (endBifunctor F) f
 
-/-- Ends of representable functors -/
-def End.representable (c : C) [HasProductsOfShape C D] [HasWideEqualizers D] :
-  EndObj (yoneda.obj c) ≅ 𝟙_ C :=
-  { hom := End.lift {
-      app := fun c' => 𝟙 (c ⟶ c')
-      dinaturality := by simp
-    }
-    inv := End.π (yoneda.obj c) c
-    hom_inv_id := by
-      apply End.uniq
-      intro c'
-      simp only [Category.assoc, End.lift_π, Category.id_comp]
-    inv_hom_id := by simp }
+/-- A natural transformation induces a morphism between ends. -/
+noncomputable def map {F G : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
+    [Limits.HasEnd (endBifunctor G)] (α : F ⟶ G) : EndObj F ⟶ EndObj G :=
+  Limits.end_.map (curry.map α)
+
+@[reassoc (attr := simp)]
+theorem map_π {F G : Cᵒᵖ × C ⥤ D} [Limits.HasEnd (endBifunctor F)]
+    [Limits.HasEnd (endBifunctor G)] (α : F ⟶ G) (c : C) :
+    map α ≫ π G c = π F c ≫ α.app (op c, c) := by
+  simp only [map, π, EndObj, endBifunctor, curry_map_app_app]
+  exact Limits.end_.map_π (curry.map α) c
 
 end EndKan.End

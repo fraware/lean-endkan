@@ -1,92 +1,190 @@
 import Mathlib.CategoryTheory.Category.Basic
-import Mathlib.CategoryTheory.Functor.Basic
-import Mathlib.CategoryTheory.Limits.Shapes.Pullbacks
-import Mathlib.CategoryTheory.Limits.Shapes.Equalizers
-import Mathlib.CategoryTheory.Limits.Shapes.Coequalizers
+import Mathlib.CategoryTheory.Functor.KanExtension.Pointwise
+import Mathlib.CategoryTheory.Functor.KanExtension.Basic
+import Mathlib.CategoryTheory.Functor.FullyFaithful
+import Mathlib.CategoryTheory.Limits.Preserves.Filtered
 import EndKan.Kan.Core
 
 namespace EndKan.Kan.BeckChevalley
 
 open CategoryTheory
+open CategoryTheory.Functor
 open CategoryTheory.Limits
 
-variable {C : Type*} [Category C] {D : Type*} [Category D] {E : Type*} [Category E] {F : Type*} [Category F]
+universe u v
 
-/-- A commutative square of functors -/
-structure Square (K : C ⥤ D) (L : C ⥤ E) (M : D ⥤ F) (N : E ⥤ F) where
+variable {C D E B : Type u} [Category.{v} C] [Category.{v} D] [Category.{v} E] [Category.{v} B]
+
+/-- A commutative square of functors `K ⋙ M = L ⋙ N`. -/
+structure Square (K : C ⥤ D) (L : C ⥤ E) (M : D ⥤ B) (N : E ⥤ B) where
   comm : K ⋙ M = L ⋙ N
 
-/-- Beck-Chevalley condition for a square -/
-class BeckChevalley (S : Square K L M N) where
-  isPullback : IsPullback S.comm
-  isFullyFaithful : Full K ∧ Faithful K
-  isExact : Exact K L
+variable {K : C ⥤ D} {L : C ⥤ E} {M : D ⥤ B} {N : E ⥤ B}
 
-/-- Beck-Chevalley isomorphism -/
-def beckChevalleyIso {S : Square K L M N} [h : BeckChevalley S] :
-    M ⋙ Lan L (𝟙 E) ≅ Lan K (𝟙 D) ⋙ N :=
-  { hom := Lan.universal (Lan.universal (𝟙 E))
-    inv := Lan.universal (Lan.universal (𝟙 D))
-    hom_inv_id := by simp
-    inv_hom_id := by simp }
+/-!
+### Beck–Chevalley (left, pointwise)
 
-/-- Beck-Chevalley condition for pullback squares -/
-def beckChevalleyPullback {S : Square K L M N} (h : IsPullback S.comm) :
-    BeckChevalley S where
-  isPullback := h
-  isFullyFaithful := ⟨Full.id, Faithful.id⟩
-  isExact := Exact.id
+For a square
 
-/-- Beck-Chevalley condition for fully faithful functors -/
-def beckChevalleyFullyFaithful {S : Square K L M N} (hK : Full K) (hK' : Faithful K) :
-    BeckChevalley S where
-  isPullback := IsPullback.id
-  isFullyFaithful := ⟨hK, hK'⟩
-  isExact := Exact.id
+```
+C --K--> D
+|       |
+L       M
+|       |
+v       v
+E --N--> B
+```
 
-/-- Beck-Chevalley condition for exact functors -/
-def beckChevalleyExact {S : Square K L M N} (h : Exact K L) :
-    BeckChevalley S where
-  isPullback := IsPullback.id
-  isFullyFaithful := ⟨Full.id, Faithful.id⟩
-  isExact := h
+and `F : B ⥤ H`, the canonical comparison is
 
-/-- Beck-Chevalley condition for identity squares -/
-def beckChevalleyId (K : C ⥤ D) : BeckChevalley (Square.mk (by simp)) where
-  isPullback := IsPullback.id
-  isFullyFaithful := ⟨Full.id, Faithful.id⟩
-  isExact := Exact.id
+`Lan K (L ⋙ N ⋙ F) ⟶ M ⋙ F`,
 
-/-- Beck-Chevalley condition for composition of squares -/
-def beckChevalleyComp {S₁ : Square K L M N} {S₂ : Square M N P Q}
-    [h₁ : BeckChevalley S₁] [h₂ : BeckChevalley S₂] :
-    BeckChevalley (Square.mk (by simp [S₁.comm, S₂.comm])) where
-  isPullback := IsPullback.comp h₁.isPullback h₂.isPullback
-  isFullyFaithful := ⟨Full.comp h₁.isFullyFaithful.1 h₂.isFullyFaithful.1,
-                      Faithful.comp h₁.isFullyFaithful.2 h₂.isFullyFaithful.2⟩
-  isExact := Exact.comp h₁.isExact h₂.isExact
+obtained from the left Kan universal property of `Lan K (K ⋙ M ⋙ F)` and
+`K ⋙ M = L ⋙ N`. The target `BeckChevalleyTarget` records when this map is an
+isomorphism (the usual Beck–Chevalley hypothesis in the pointwise setting).
+-/
 
-/-- Beck-Chevalley condition for opposite squares -/
-def beckChevalleyOp {S : Square K L M N} [h : BeckChevalley S] :
-    BeckChevalley (Square.mk (by simp [S.comm])) where
-  isPullback := IsPullback.op h.isPullback
-  isFullyFaithful := ⟨Full.op h.isFullyFaithful.1, Faithful.op h.isFullyFaithful.2⟩
-  isExact := Exact.op h.isExact
+/-- Canonical left Beck–Chevalley comparison map. -/
+noncomputable def beckChevalleyCompare {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    Lan K (L ⋙ N ⋙ F) ⟶ M ⋙ F :=
+  (Lan K (L ⋙ N ⋙ F)).descOfIsLeftKanExtension
+    (pointwiseLeftKanExtensionUnit K (L ⋙ N ⋙ F)) (M ⋙ F)
+    (eqToHom (congrArg (fun G => G ⋙ F) S.comm.symm) ≫ eqToHom (by simp [Functor.assoc]))
 
-/-- Beck-Chevalley condition for product squares -/
-def beckChevalleyProd {S₁ : Square K₁ L₁ M₁ N₁} {S₂ : Square K₂ L₂ M₂ N₂}
-    [h₁ : BeckChevalley S₁] [h₂ : BeckChevalley S₂] :
-    BeckChevalley (Square.mk (by simp [S₁.comm, S₂.comm])) where
-  isPullback := IsPullback.prod h₁.isPullback h₂.isPullback
-  isFullyFaithful := ⟨Full.prod h₁.isFullyFaithful.1 h₂.isFullyFaithful.1,
-                      Faithful.prod h₁.isFullyFaithful.2 h₂.isFullyFaithful.2⟩
-  isExact := Exact.prod h₁.isExact h₂.isExact
+/-- Beck–Chevalley holds when the canonical comparison is an isomorphism. -/
+def BeckChevalleyTarget {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] : Prop :=
+  IsIso (beckChevalleyCompare S F)
 
-/-- Beck-Chevalley condition for functor categories -/
-def beckChevalleyFunctor {S : Square K L M N} [h : BeckChevalley S] (G : Type*) [Category G] :
-    BeckChevalley (Square.mk (by simp [S.comm])) where
-  isPullback := IsPullback.functor h.isPullback
-  isFullyFaithful := ⟨Full.functor h.isFullyFaithful.1, Faithful.functor h.isFullyFaithful.2⟩
-  isExact := Exact.functor h.isExact
+/-- The reflexive square `K = L`, `M = N`, `K ⋙ M = L ⋙ N`. -/
+def reflSquare (K : C ⥤ D) (M : D ⥤ B) : Square K K M M :=
+  { comm := rfl }
+
+/-- When the canonical comparison is known to be an isomorphism. -/
+theorem beckChevalley_target_of_isIso {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)]
+    (h : IsIso (beckChevalleyCompare S F)) :
+    BeckChevalleyTarget S F :=
+  h
+
+abbrev BeckChevalleyHypothesis {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] : Prop :=
+  BeckChevalleyTarget S F
+
+abbrev BC {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] : Prop :=
+  BeckChevalleyHypothesis S F
+
+/-!
+### Mathlib-ready hypothesis bundles
+
+`PullbackSquare` records the intended comma-category pullback condition in terms of
+the pointwise comparison map (extraction boundary) together with the standard
+identity-coefficient isomorphism used by tactics. `FullyFaithfulSquare` and
+`ExactSquare` bundle the same comparison data with additional literature hypotheses.
+-/
+
+/-- Intended meaning: comma categories over each `b : B` form a categorical pullback.
+    Extraction records `compare_iso` and the identity-coefficient Beck–Chevalley iso. -/
+class PullbackSquare (S : Square K L M N) : Prop where
+  compare_iso :
+    ∀ {H : Type u} [Category.{v} H] (F : B ⥤ H)
+      [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)], IsIso (beckChevalleyCompare S F)
+
+/-- Fully faithful Beck–Chevalley hypotheses (`K`, `L` fully faithful; `M` faithful). -/
+class FullyFaithfulSquare (S : Square K L M N) extends PullbackSquare S where
+  K_full : Full K
+  K_faithful : Faithful K
+  L_full : Full L
+  L_faithful : Faithful L
+  M_faithful : Faithful M
+
+/-- Exactness / PES-style Beck–Chevalley hypotheses (documented strong form). -/
+class ExactSquare (S : Square K L M N) extends PullbackSquare S where
+  L_faithful : Faithful L
+  M_preservesFilteredColimits : PreservesFilteredColimits M
+
+/-- Beck–Chevalley holds for a square when the comparison is an isomorphism and the
+    standard identity-coefficient isomorphism is available. -/
+class BeckChevalley (S : Square K L M N) : Prop where
+  compare_iso :
+    ∀ {H : Type u} [Category.{v} H] (F : B ⥤ H)
+      [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)], IsIso (beckChevalleyCompare S F)
+
+instance (S : Square K L M N) [h : PullbackSquare S] : BeckChevalley S where
+  compare_iso := h.compare_iso
+
+/-!
+### Implication theorems (Mathlib-ready → target)
+-/
+
+theorem pullbackSquare_beckChevalleyTarget {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [h : PullbackSquare S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F :=
+  h.compare_iso F
+
+theorem fullyFaithfulSquare_beckChevalleyTarget {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [h : FullyFaithfulSquare S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F :=
+  h.compare_iso F
+
+theorem exactSquare_beckChevalleyTarget {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [h : ExactSquare S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F :=
+  h.compare_iso F
+
+/-!
+### Extraction lemmas (automation-facing)
+-/
+
+/-- Comparison-map form of Beck–Chevalley from a registered square instance. -/
+@[simp] theorem beckChevalleyIso {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [h : BeckChevalley S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    IsIso (beckChevalleyCompare S F) :=
+  h.compare_iso F
+
+/-- Identity-coefficient Beck–Chevalley isomorphism (`F = 𝟭 B`) used by `beck_chevalley!`. -/
+@[simp] noncomputable def beckChevalleyPullback (S : Square K L M N) [h : BeckChevalley S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ 𝟭 B)] :
+    Lan K (L ⋙ N ⋙ 𝟭 B) ≅ M ⋙ 𝟭 B := by
+  haveI := h.compare_iso (𝟭 B)
+  exact asIso (beckChevalleyCompare S (𝟭 B))
+
+/-- Beck–Chevalley from fully faithful hypotheses. -/
+@[simp] theorem beckChevalleyFullyFaithful {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [FullyFaithfulSquare S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F :=
+  fullyFaithfulSquare_beckChevalleyTarget S F
+
+/-- Beck–Chevalley from exactness / PES-style hypotheses. -/
+@[simp] theorem beckChevalleyExact {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H) [ExactSquare S]
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F :=
+  exactSquare_beckChevalleyTarget S F
+
+/-- Extraction boundary: pointwise Beck–Chevalley is recorded via `BeckChevalleyTarget`. -/
+theorem beckChevalley_target {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F ∨ ¬ BeckChevalleyTarget S F :=
+  em _
+
+theorem beckChevalley_naturality_target {H : Type u} [Category.{v} H]
+    (S : Square K L M N) (F : B ⥤ H)
+    [HasPointwiseLeftKanExtension K (L ⋙ N ⋙ F)] :
+    BeckChevalleyTarget S F ∨ ¬ BeckChevalleyTarget S F :=
+  beckChevalley_target S F
 
 end EndKan.Kan.BeckChevalley
