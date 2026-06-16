@@ -11,12 +11,15 @@ experimental modules are out of scope.
 Planned Mathlib PR sequence (this repository is **extraction staging** — not ready for the
 deepest Mathlib stream yet; automation and experimental modules stay local).
 
-1. **First PR:** `CategoryTheory` end β/η examples and helper lemmas (`EndKan.End.Core`,
-   `EndKan.End.BetaEta`)
-2. **Second PR:** coend β/η examples and helper lemmas (`EndKan.Coend.Core`,
-   `EndKan.Coend.BetaEta`)
-3. **Later:** Fubini helper lemmas (ends and coends), Kan extension helpers, Beck–Chevalley
-   design issue (`EndKan.Fubini`, `EndKan.Kan.Core`, `EndKan.Kan.BeckChevalley`)
+| Step | Topic | Repo staging | Status |
+|------|-------|--------------|--------|
+| 1 | End β/η | `scratch/mathlib-end-beta/`, `Scratch.MathlibEndBetaExamples` | Merged (#12) |
+| 2 | Coend β/η | `scratch/mathlib-coend-beta/`, `Scratch.MathlibCoendBetaExamples` | Merged (#13) |
+| 3 | Nested Fubini | `scratch/mathlib-fubini/`, `Scratch.MathlibFubiniExamples` | Merged (#14) |
+| 4–5 | Kan / Beck–Chevalley | `scratch/mathlib-kan-bc/`, `Scratch.MathlibKanBcExamples` | Merged (#14) |
+
+**Next:** submit Mathlib upstream PRs in order (end β/η → coend β/η → Fubini → BC design issue).
+Briefs: `docs/MATHLIB_PR_*.md`. Acceptance: `scripts/acceptance.ps1`.
 
 Optional geometric hypothesis instances live in `EndKan.Kan.BeckChevalley.Hypotheses` and are
 not part of the default `EndKan` import boundary.
