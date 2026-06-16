@@ -33,6 +33,14 @@ Invoke-Step "lake build Scratch.SliceIsoMin" {
     lake build Scratch.SliceIsoMin
 }
 
+Invoke-Step "lake build Scratch.MathlibFubiniExamples" {
+    lake build Scratch.MathlibFubiniExamples
+}
+
+Invoke-Step "lake build Scratch.MathlibKanBcExamples" {
+    lake build Scratch.MathlibKanBcExamples
+}
+
 Invoke-Step "lake env lean scratch/SliceIsoMin.lean" {
     lake env lean scratch/SliceIsoMin.lean
 }

@@ -89,6 +89,10 @@ product Fubini. Proposed path: `Mathlib/CategoryTheory/Limits/Shapes/Ends/Fubini
 
 **Proof dependencies:** `EndKan.End.Core`, `EndKan.Fubini.Slice`, `EndKan.Fubini.Nested`.
 
+**Staging package:** `scratch/mathlib-fubini/` (`LEMMA_MAP.md`, `MODULE_STRUCTURE.md`);
+buildable examples in `src/Scratch/MathlibFubiniExamples.lean`; PR brief in
+`docs/MATHLIB_PR_FUBINI.md`.
+
 ---
 
 ## 6. Fubini coends
@@ -106,6 +110,9 @@ product Fubini. Proposed path: `Mathlib/CategoryTheory/Limits/Shapes/Ends/Fubini
 Proposed path: parallel to end Fubini helpers in Mathlib.
 
 **Proof dependencies:** `EndKan.Coend.Core`, `EndKan.Fubini.CoendSlice`, `EndKan.Fubini.NestedCoend`.
+
+**Staging package:** shared with §5 — `scratch/mathlib-fubini/`, `src/Scratch/MathlibFubiniExamples.lean`,
+`docs/MATHLIB_PR_FUBINI.md`.
 
 ---
 
@@ -126,6 +133,9 @@ main upstream gap. Proposed path: `Mathlib/CategoryTheory/Functor/KanExtension/B
 
 **Proof dependencies:** `EndKan.Kan.Core`, `EndKan.Kan.BeckChevalley`,
 `EndKan.Kan.BeckChevalley.Hypotheses` (optional).
+
+**Staging package:** `scratch/mathlib-kan-bc/` (`LEMMA_MAP.md`); design brief in
+`docs/MATHLIB_PR_KAN_BECKCHEVALLEY.md`; examples in `src/Scratch/MathlibKanBcExamples.lean`.
 
 ---
 
