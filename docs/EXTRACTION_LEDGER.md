@@ -8,11 +8,18 @@ experimental modules are out of scope.
 
 ## Upstream order
 
-1. End β/η helper lemmas and examples
-2. Coend β/η helper lemmas and examples
-3. Fubini helper lemmas (ends and coends)
-4. Kan extension helper lemmas
-5. Beck–Chevalley design and comparison lemmas
+Planned Mathlib PR sequence (this repository is **extraction staging** — not ready for the
+deepest Mathlib stream yet; automation and experimental modules stay local).
+
+1. **First PR:** `CategoryTheory` end β/η examples and helper lemmas (`EndKan.End.Core`,
+   `EndKan.End.BetaEta`)
+2. **Second PR:** coend β/η examples and helper lemmas (`EndKan.Coend.Core`,
+   `EndKan.Coend.BetaEta`)
+3. **Later:** Fubini helper lemmas (ends and coends), Kan extension helpers, Beck–Chevalley
+   design issue (`EndKan.Fubini`, `EndKan.Kan.Core`, `EndKan.Kan.BeckChevalley`)
+
+Optional geometric hypothesis instances live in `EndKan.Kan.BeckChevalley.Hypotheses` and are
+not part of the default `EndKan` import boundary.
 
 ---
 
