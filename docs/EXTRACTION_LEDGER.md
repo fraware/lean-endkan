@@ -65,6 +65,10 @@ packaging and β/η lemmas. Proposed path:
 
 **Proof dependencies:** `EndKan.Coend.Core`, `EndKan.Coend.BetaEta`.
 
+**Staging package:** `scratch/mathlib-coend-beta/` (`LEMMA_MAP.md`, `MODULE_STRUCTURE.md`);
+buildable examples in `src/Scratch/MathlibCoendBetaExamples.lean`; PR brief in
+`docs/MATHLIB_PR_COEND_BETA_ETA.md`.
+
 ---
 
 ## 5. Fubini ends
