@@ -41,6 +41,10 @@ diagonal profunctor API (`Cᵒᵖ × C`) with named β/η lemmas. Proposed path:
 
 **Proof dependencies:** `EndKan.End.Core`, `EndKan.End.BetaEta`.
 
+**Staging package:** `scratch/mathlib-end-beta/` (`LEMMA_MAP.md`, `MODULE_STRUCTURE.md`);
+buildable examples in `src/Scratch/MathlibEndBetaExamples.lean`; PR brief in
+`docs/MATHLIB_PR_END_BETA_ETA.md`.
+
 ---
 
 ## 2. Coend β/η (second PR)
