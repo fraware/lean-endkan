@@ -18,6 +18,7 @@ lean_lib «EndKan.Experimental» where
   roots := #[`EndKan.Experimental]
 
 lean_lib «EndKan.ProductionBenchmarks» where
+  roots := #[`EndKan.ProductionBenchmarks]
 
 lean_exe «test» where
   root := `Test
