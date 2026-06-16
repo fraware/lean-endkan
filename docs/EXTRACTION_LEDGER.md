@@ -23,6 +23,46 @@ not part of the default `EndKan` import boundary.
 
 ---
 
+## 1. End β/η (first PR)
+
+| Item | Local name | Status | Notes |
+|------|------------|--------|-------|
+| Curried bifunctor | `endBifunctor` | Proved | `Cᵒᵖ × C ⥤ D` → `Cᵒᵖ ⥤ C ⥤ D`; `@[simp]` fiber lemmas |
+| Dinaturality | `DinaturalTransformation`, `Cowedge` | Proved | Diagonal wedge data for `Limits.end_` |
+| End object | `EndObj`, `π`, `lift`, `uniq` | Proved | Thin wrapper over `Limits.end_`; `lift_π`, `π_natural` |
+| Post-composition | `post_ext`, `post_uniq` | Proved | Yoneda-style uniqueness for maps from the end |
+| Functoriality | `map`, `map_π`, `map_id`, `map_comp` | Proved | Via `Limits.end_.map` |
+| β-reduction | `end_beta`, `end_π_beta` | Proved | `lift ω ≫ π F c = ω.app c`; projection dinaturality |
+| η-expansion | `end_eta`, `end_π_eta` | Proved | Uniqueness from `uniq` |
+
+**Mathlib overlap:** `Limits.end_`, `end_.π`, `end_.lift` exist; EndKan packages the
+diagonal profunctor API (`Cᵒᵖ × C`) with named β/η lemmas. Proposed path:
+`Mathlib/CategoryTheory/Limits/Shapes/Ends/BetaEta.lean`.
+
+**Proof dependencies:** `EndKan.End.Core`, `EndKan.End.BetaEta`.
+
+---
+
+## 2. Coend β/η (second PR)
+
+| Item | Local name | Status | Notes |
+|------|------------|--------|-------|
+| Swap + currying | `coendSwap`, `coendBifunctor` | Proved | `@[simp]` diagonal and fiber lemmas |
+| Key rewrite | `eqToHom_symm_comp_mpr_diagonal` | Proved | Bridges `F(c, op c)` and curried hom-types |
+| Dinaturality | `DinaturalTransformation`, `ofDiagonal` | Proved | Diagonal data packaging for `Limits.coend` |
+| Coend object | `CoendObj`, `ι`, `ιCurry`, `desc`, `uniq` | Proved | `desc_ι`, `desc_ιCurry`, `ιCurry_natural` |
+| Functoriality | `map`, `map_ιCurry`, `coend_map_id` | Proved | Via `Limits.coend.map` |
+| β-reduction | `coend_beta`, `coend_ι_beta`, `coend_ιCurry_beta` | Proved | Universal morphism commutation |
+| η-expansion | `coend_eta`, `coend_ι_eta` | Proved | Uniqueness from `uniq` |
+
+**Mathlib overlap:** `Limits.coend` diagonal API exists; EndKan adds explicit `C × Cᵒᵖ`
+packaging and β/η lemmas. Proposed path:
+`Mathlib/CategoryTheory/Limits/Shapes/Coends/BetaEta.lean`.
+
+**Proof dependencies:** `EndKan.Coend.Core`, `EndKan.Coend.BetaEta`.
+
+---
+
 ## 5. Fubini ends
 
 | Item | Local name | Status | Notes |
@@ -58,6 +98,26 @@ product Fubini. Proposed path: `Mathlib/CategoryTheory/Limits/Shapes/Ends/Fubini
 Proposed path: parallel to end Fubini helpers in Mathlib.
 
 **Proof dependencies:** `EndKan.Coend.Core`, `EndKan.Fubini.CoendSlice`, `EndKan.Fubini.NestedCoend`.
+
+---
+
+## 7. Kan extension helpers
+
+| Item | Local name | Status | Notes |
+|------|------------|--------|-------|
+| Pointwise Lan/Ran | `Lan`, `Ran` | Proved | Abbreviations over Mathlib `pointwiseLeftKanExtension` / `pointwiseRightKanExtension` |
+| Object formulas | `lan_obj_eq`, `ran_obj_eq` | Proved | Colimit / limit of structured arrows |
+| Beck–Chevalley square | `Square`, `reflSquare` | Proved | Commutative square `K ⋙ M = L ⋙ N` |
+| Comparison map | `beckChevalleyCompare`, `BeckChevalleyTarget` | Proved | `Lan K (L ⋙ N ⋙ F) ⟶ M ⋙ F` |
+| Hypothesis bundles | `PullbackSquare`, `FullyFaithfulSquare`, `ExactSquare`, `BeckChevalley` | Partial | `compare_iso` field; instances in `Hypotheses.lean` |
+| Extraction lemmas | `beckChevalleyIso`, `beckChevalleyPullback` | Proved | Automation-facing; tactics stay local |
+
+**Mathlib overlap:** Pointwise Kan extensions are in Mathlib; Beck–Chevalley design is the
+main upstream gap. Proposed path: `Mathlib/CategoryTheory/Functor/KanExtension/BeckChevalley.lean`
+(design issue first).
+
+**Proof dependencies:** `EndKan.Kan.Core`, `EndKan.Kan.BeckChevalley`,
+`EndKan.Kan.BeckChevalley.Hypotheses` (optional).
 
 ---
 
