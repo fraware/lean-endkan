@@ -43,7 +43,7 @@ outer profunctors. A small Fubini library reduces bookkeeping for double limits 
 ### Documented boundary (not hidden)
 
 - [ ] `AllEndSliceContrIso` / `CoendSliceContrIso` — contr-leg iso per profunctor
-- [ ] rc1 mutual `IsIso` bootstrap failure (see `scratch/SliceIsoMin.lean`)
+- [ ] mutual `IsIso` bootstrap failure (see `scratch/SliceIsoMin.lean`)
 
 ### Explicitly deferred
 
