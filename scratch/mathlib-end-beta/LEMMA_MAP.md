@@ -1,7 +1,7 @@
 # End β/η — Mathlib upstream lemma map
 
 Staging for the **first** Mathlib extraction PR (see `docs/EXTRACTION_LEDGER.md` §1).
-Source: `EndKan.End.Core`, `EndKan.End.BetaEta`. Target Mathlib pin: `v4.31.0-rc1`.
+Source: `EndKan.End.Core`, `EndKan.End.BetaEta`. Target Mathlib pin: `v4.31.0`.
 
 ## Mathlib overlap (already upstream)
 
