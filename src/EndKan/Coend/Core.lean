@@ -151,20 +151,14 @@ theorem ιCurry_natural {F : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (coendBifuncto
 theorem ι_dinatural {F : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (coendBifunctor F)]
     {c c' : C} (f : c ⟶ c') :
     F.map (𝟙 c ×ₘ f.op) ≫ ι F c = F.map (f ×ₘ 𝟙 (op c')) ≫ ι F c' := by
-  rw [ι, ι, ← coendBifunctor_map_app, ← coendBifunctor_obj_map]
-  convert Limits.coend.condition (coendBifunctor F) f using 1
-  · rw [← Category.assoc]
-    exact HEq.eq <|
-      heq_comp (eq1 := rfl) (eq2 := coendDiagonal (F := F) c) (eq3 := rfl)
-        (H1 := comp_eqToHom_heq (f := ((coendBifunctor F).map f.op).app c)
-          (h := (coendDiagonal (F := F) c).symm))
-        HEq.rfl
-  · rw [← Category.assoc]
-    exact HEq.eq <|
-      heq_comp (eq1 := rfl) (eq2 := coendDiagonal (F := F) c') (eq3 := rfl)
-        (H1 := comp_eqToHom_heq (f := ((coendBifunctor F).obj (op c')).map f)
-          (h := (coendDiagonal (F := F) c').symm))
-        HEq.rfl
+  rw [ι, ι, ← coendBifunctor_map_app, ← coendBifunctor_obj_map, ← Category.assoc, ← Category.assoc]
+  exact HEq.eq <|
+    HEq.trans
+      (heq_comp rfl (coendDiagonal (F := F) c) rfl
+        (comp_eqToHom_heq (((coendBifunctor F).map f.op).app c) (coendDiagonal (F := F) c).symm) HEq.rfl)
+      (HEq.trans (Eq.heq (Limits.coend.condition (coendBifunctor F) f))
+        (heq_comp rfl (coendDiagonal (F := F) c') rfl
+          ((comp_eqToHom_heq (((coendBifunctor F).obj (op c')).map f) (coendDiagonal (F := F) c').symm).symm) HEq.rfl))
 
 /-- A natural transformation induces a morphism between coends. -/
 noncomputable abbrev map {F G : C × Cᵒᵖ ⥤ E} [Limits.HasCoend (coendBifunctor F)]
