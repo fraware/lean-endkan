@@ -33,6 +33,21 @@ theorem endWedge_eq_op (cd : C × D) : endWedge cd.1 cd.2 = (op cd, cd) := rfl
 
 @[simp] theorem endOffCov_eq (c : C) (d d' : D) : endOffCov c d d' = (op (c, d), (c, d')) := rfl
 
+@[simp]
+theorem endBifunctor_fiber_obj_wedge {F : EndIdx C D ⥤ E} (cd cd' : C × D) :
+    ((EndKan.End.endBifunctor F).obj (op cd)).obj cd' = F.obj (op cd, cd') := by
+  simp [EndKan.End.endBifunctor]
+
+@[simp]
+theorem endBifunctor_obj_map_wedge {F : EndIdx C D ⥤ E} {cd cd' : C × D} (fg : cd ⟶ cd') :
+    ((EndKan.End.endBifunctor F).obj (op cd)).map fg = F.map (𝟙 (op cd) ×ₘ fg) := by
+  simp [EndKan.End.endBifunctor]
+
+@[simp]
+theorem endBifunctor_map_app_wedge {F : EndIdx C D ⥤ E} {cd cd' : C × D} (fg : cd ⟶ cd') :
+    ((EndKan.End.endBifunctor F).map fg.op).app cd' = F.map (fg.op ×ₘ 𝟙 cd') := by
+  simp [EndKan.End.endBifunctor]
+
 @[simp] theorem endπ_obj_eq (F : EndIdx C D ⥤ E) (c : C) (d : D)
     [Limits.HasEnd (EndKan.End.endBifunctor F)] :
     EndKan.End.π F (c, d) = EndKan.End.π F (c, d) := rfl
@@ -571,7 +586,8 @@ theorem endInnerπWedge_dinatural_curry (F : EndIdx C D ⥤ E) {cd cd' : C × D}
     [Epi (endInnerLift F cd'.2)] :
     endInnerπWedge F cd ≫ ((EndKan.End.endBifunctor F).obj (op cd)).map fg =
       endInnerMap F fg.2 ≫ endInnerπWedge F cd' ≫ ((EndKan.End.endBifunctor F).map fg.op).app cd' := by
-  convert endInnerπWedge_dinatural F fg using 1
+  rw [endBifunctor_obj_map_wedge, endBifunctor_map_app_wedge]
+  exact endInnerπWedge_dinatural F fg
 
 theorem endInnerMapTarget (F : EndIdx C D ⥤ E) {d d' : D} (f : d ⟶ d')
     [AllEndSliceContrIso F]
