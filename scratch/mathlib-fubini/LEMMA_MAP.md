@@ -1,7 +1,7 @@
 # Fubini — Mathlib upstream lemma map
 
 Staging for the **third** Mathlib extraction wave (see `docs/EXTRACTION_LEDGER.md` §5–§6).
-Source: `EndKan.Fubini.*`. Target Mathlib pin: `v4.31.0-rc1`.
+Source: `EndKan.Fubini.*`. Target Mathlib pin: `v4.31.0`.
 
 ## Mathlib overlap
 
