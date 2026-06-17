@@ -68,7 +68,7 @@ lake build Scratch.MathlibEndBetaExamples
 
 ## Dependency notes
 
-- **Lean / Mathlib pin:** `v4.31.0-rc1` (matches current `lean-endkan` `lakefile.lean`)
+- **Lean / Mathlib pin:** `v4.31.0` (matches current `lean-endkan` `lakefile.lean`)
 - **Imports:** only `Limits.Shapes.End`, `Functor.Currying`, `Products.Basic`, `Opposites`
 - **No new typeclass axioms**; all lemmas assume `[HasEnd (endBifunctor F)]`
 - **Review risk:** naming `DiagonalWedge` vs reusing `Wedge`; whether `endDiagonal` deserves
