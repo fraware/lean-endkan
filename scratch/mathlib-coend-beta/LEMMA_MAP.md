@@ -1,7 +1,7 @@
 # Coend β/η — Mathlib upstream lemma map
 
 Staging for the **second** Mathlib extraction PR (see `docs/EXTRACTION_LEDGER.md` §2).
-Source: `EndKan.Coend.Core`, `EndKan.Coend.BetaEta`. Target Mathlib pin: `v4.31.0-rc1`.
+Source: `EndKan.Coend.Core`, `EndKan.Coend.BetaEta`. Target Mathlib pin: `v4.31.0`.
 
 ## Mathlib overlap (already upstream)
 
