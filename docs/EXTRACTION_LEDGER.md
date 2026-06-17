@@ -1,10 +1,8 @@
 # Mathlib extraction ledger
 
 This document tracks EndKan lemmas that are candidates for upstream Mathlib PRs on
-Lean `v4.31.0-rc1` / Mathlib `v4.31.0-rc1`. As of 2026-06-15, `leanprover/lean4:v4.31.0`
-stable is not released (latest stable: `v4.30.0`; latest prerelease: `v4.31.0-rc1`), so
-the iso-bootstrap mutual-instance experiment stays on rc1. Repository-local automation and
-experimental modules are out of scope.
+Lean `v4.31.0` / Mathlib `v4.31.0` (aligned with Mathlib master as of 2026-06-17).
+Repository-local automation and experimental modules are out of scope.
 
 ## Upstream order
 
@@ -19,7 +17,8 @@ deepest Mathlib stream yet; automation and experimental modules stay local).
 | 4–5 | Kan / Beck–Chevalley | `scratch/mathlib-kan-bc/`, `Scratch.MathlibKanBcExamples` | Merged (#14) |
 
 **Next:** submit Mathlib upstream PRs in order (end β/η → coend β/η → Fubini → BC design issue).
-Briefs: `docs/MATHLIB_PR_*.md`. Acceptance: `scripts/acceptance.ps1`.
+Briefs: `docs/MATHLIB_PR_*.md`. Readiness: `docs/upstream/MATHLIB_SUBMISSION_READINESS.md`.
+Acceptance: `scripts/acceptance.ps1`.
 
 Optional geometric hypothesis instances live in `EndKan.Kan.BeckChevalley.Hypotheses` and are
 not part of the default `EndKan` import boundary.
@@ -81,7 +80,7 @@ buildable examples in `src/Scratch/MathlibCoendBetaExamples.lean`; PR brief in
 | Slice embedding | `endSliceEmbed`, `endSlice` | Proved | `Cᵒᵖ × C` into `EndIdx C D` at fixed `d` |
 | Inner end | `endInnerObj`, `endInnerπ`, `endInnerLift` | Proved | `endInnerLift_π`, `endInnerLift_πWedge` |
 | `d`-action on inner ends | `endInnerMap` | Proved | Characterized by `endInnerLift d ≫ endInnerMap f = endInnerLift d'` |
-| Bootstrap iso | `endSliceOpCovIso`, `[AllEndSliceContrIso F]` | Hypothesis class + packager | Unconditional mutual bootstrap blocked on rc1 (Attempt 4: lemma stack + `allEndSliceContrIsoOfData` green; seeded `mutual def` fails WF recursion — see `Slice.lean` `sliceIsoBootstrap`). Joint-mono closure blocked (Attempt 5: cov iso + `EndSliceJointMono` insufficient — see `sliceIsoBootstrap` comment). Concrete consumer: `EndKan.Fubini.Examples` (`allEndSliceContrIsoOfData` on constant profunctor) |
+| Bootstrap iso | `endSliceOpCovIso`, `[AllEndSliceContrIso F]` | Hypothesis class + packager | Unconditional mutual bootstrap blocked (Attempt 4: lemma stack + `allEndSliceContrIsoOfData` green; seeded `mutual def` fails WF recursion — see `Slice.lean` `sliceIsoBootstrap`). Joint-mono closure blocked (Attempt 5: cov iso + `EndSliceJointMono` insufficient — see `sliceIsoBootstrap` comment). Concrete consumer: `EndKan.Fubini.Examples` (`allEndSliceContrIsoOfData` on constant profunctor) |
 | Nested outer end | `endOuterProfunctor`, `endNestedObj` | Proved | Functorial via `endInnerMap_id` / `comp` |
 | Fubini iso | `endFubiniIso` | Proved | `EndObj F ≅ endNestedObj F`; `@[simp] endFubiniIso_hom` |
 | Indexing | `EndIdx C D` | Defeq | `(C × D)ᵒᵖ × (C × D)`; `endWedge_eq_op` |
