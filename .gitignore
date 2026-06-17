@@ -27,3 +27,7 @@ coverage-*
 performance-report.json
 security-report.json
 quality-report.json
+
+# Local Lean debug logs (not part of the repo)
+nested_*.log
+nested_err.txt
