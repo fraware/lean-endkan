@@ -70,7 +70,7 @@ lake build Scratch.MathlibCoendBetaExamples
 
 ## Dependency notes
 
-- **Lean / Mathlib pin:** `v4.31.0-rc1` (matches current `lean-endkan` `lakefile.lean`)
+- **Lean / Mathlib pin:** `v4.31.0` (matches current `lean-endkan` `lakefile.lean`)
 - **Imports:** coend API, `Functor.Currying`, `Products.Basic`, `Whiskering`, `EqToHom`
 - **No new typeclass axioms**; all lemmas assume `[HasCoend (coendBifunctor F)]`
 - **Review risk:** naming `DiagonalDinaturality` vs reusing existing dinaturality structures;
