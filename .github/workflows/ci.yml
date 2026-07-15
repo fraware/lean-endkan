@@ -20,6 +20,9 @@ jobs:
         with:
           build-args: EndKan
 
+      - name: Build narrowed endBifunctor consumer
+        run: lake build Scratch.MathlibEndBifunctorConsumer
+
       - name: Executable smoke tests
         run: |
           lake exe test
