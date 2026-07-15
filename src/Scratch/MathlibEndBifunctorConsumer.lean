@@ -51,8 +51,8 @@ theorem endBifunctor_map_app {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c ⟶ c') 
     ((endBifunctor F).map f.op).app c' = F.map (f.op ×ₘ 𝟙 c') := by
   simp [endBifunctor]
 
-/-- The diagonal object equation is derivable and does not need a separate public declaration. -/
-theorem endBifunctor_obj_obj {F : Cᵒᵖ × C ⥤ D} (c : C) :
+/-- The diagonal object equation is derivable without another public declaration. -/
+example {F : Cᵒᵖ × C ⥤ D} (c : C) :
     ((endBifunctor F).obj (op c)).obj c = F.obj (op c, c) := by
   simp
 
