@@ -33,6 +33,7 @@ Write-Host "Repository: $repoRoot"
 Write-Host "Toolchain:  $(Get-Content -Raw lean-toolchain)"
 
 Invoke-Step "lake build EndKan" { lake build EndKan }
+Invoke-Step "lake build Scratch.MathlibEndBifunctorConsumer" { lake build Scratch.MathlibEndBifunctorConsumer }
 Invoke-Step "lake build Scratch.MathlibEndBetaExamples" { lake build Scratch.MathlibEndBetaExamples }
 Invoke-Step "lake build Scratch.MathlibCoendBetaExamples" { lake build Scratch.MathlibCoendBetaExamples }
 Invoke-Step "lake build Scratch.SliceIsoMin" { lake build Scratch.SliceIsoMin }
