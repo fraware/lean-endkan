@@ -1,20 +1,20 @@
-# Mathlib PR proposal for a minimal diagonal-end adapter
+# Mathlib design proposal for a minimal diagonal-end adapter
 
-## Proposed PR title
+## Proposed discussion title
 
-`feat(CategoryTheory/Limits): add a curried adapter for profunctors on Cᵒᵖ × C`
+`Curried adapter for profunctors on Cᵒᵖ × C in the end API`
 
 ## Decision
 
-The first upstream proposal is narrowed to one adapter and three general simplification lemmas. The dedicated diagonal-end object, wedge structure, universal morphism wrappers, β and η aliases, and namespace layer remain outside the initial PR.
+The first upstream discussion is narrowed to one adapter and three general object and map equations. The dedicated diagonal-end object, wedge structure, universal morphism wrappers, β and η aliases, and namespace layer remain outside the initial proposal.
 
-This scope follows a direct comparison with Mathlib's existing end API and a downstream test against `EndKan.Fubini`.
+The candidate compiles on Lean and Mathlib `v4.31.0` and is exercised against the existing Fubini layer.
 
 ## Problem addressed
 
-Mathlib's end API consumes a functor of type `Cᵒᵖ ⥤ C ⥤ D`, while profunctor developments commonly start from `F : Cᵒᵖ × C ⥤ D`. Users repeatedly expose `curry.obj F` and normalize its objects and maps back to product-category expressions.
+Mathlib's end API consumes a functor of type `Cᵒᵖ ⥤ C ⥤ D`, while profunctor developments commonly start from `F : Cᵒᵖ × C ⥤ D`. Users repeatedly expose `curry.obj F` and state equations connecting the curried objects and maps to product-category expressions.
 
-The proposed declarations remove that interface friction while preserving Mathlib's existing `end_`, `end_.π`, `end_.lift`, `end_.lift_π`, `end_.condition`, `end_.hom_ext`, and `end_.map` APIs as the canonical universal-property layer.
+The proposed declarations address that interface while preserving Mathlib's existing `end_`, `end_.π`, `end_.lift`, `end_.lift_π`, `end_.condition`, `end_.hom_ext`, and `end_.map` declarations as the universal-property API.
 
 ## Proposed declarations
 
@@ -29,9 +29,9 @@ abbrev endBifunctor (F : Cᵒᵖ × C ⥤ D) : Cᵒᵖ ⥤ C ⥤ D :=
 
 The diagonal object equation is a specialization of `endBifunctor_fiber_obj` and stays as an example or local corollary.
 
-## Scope excluded from the first PR
+## Scope excluded from the first discussion
 
-The following EndKan declarations are deferred because Mathlib already provides their mathematical content or because their library design requires separate maintainer agreement.
+The following EndKan declarations are deferred because Mathlib already provides their mathematical content or because their design requires independent evidence.
 
 - `DinaturalTransformation` and `Cowedge`
 - `EndObj`, `π`, `dinatural`, `lift`, `lift_π`, and `uniq`
@@ -43,12 +43,20 @@ The following EndKan declarations are deferred because Mathlib already provides 
 
 ## Downstream evidence
 
-`src/Scratch/MathlibEndBifunctorConsumer.lean` tests the candidate against two current uses.
+`src/Scratch/MathlibEndBifunctorConsumer.lean` validates two uses.
 
 1. `EndKan.Fubini.end_fubini_beta` reduces directly to Mathlib's existing `end_.lift_π` once `endBifunctor` supplies the expected functor type.
-2. `EndKan.Fubini.Slice` currently restates object and map normalizations for product indices. The three proposed simplification lemmas cover those rewrites, including the off-diagonal object equation used by slices.
+2. `EndKan.Fubini.Slice` restates three object and map equations for product indices. Each equation is an instance of the proposed general declarations, including the off-diagonal object equation used by slices.
 
-This evidence changes the provisional declaration set in one respect. The general `endBifunctor_fiber_obj` lemma is retained, while the diagonal-only `endBifunctor_obj_obj` lemma is derived locally. The public surface remains four declarations in total.
+The off-diagonal consumer supports retaining `endBifunctor_fiber_obj` and deriving the diagonal-only `endBifunctor_obj_obj` theorem locally. The resulting review surface contains four declarations.
+
+## Evidence boundary
+
+Validation rejected a stronger claim that the proposed simp lemmas would automatically normalize an entire dependent dinaturality equality into product form.
+
+After map simplification, Lean retained a hom target expressed through `curry.obj F`, while the proposed goal used `F.obj (op c, c')`. Resolving that whole equation would require additional dependent transport or a different statement. The candidate contains neither, and the proposal claims utility only for the isolated equations demonstrated by the Fubini slice consumer.
+
+This limitation also makes the `simp` attributes a maintainer-review question instead of a settled design choice.
 
 ## Before and after proof
 
@@ -61,30 +69,32 @@ EndKan.Fubini.end_fubini_beta f h c
 The narrowed interface reaches the same universal-property result through Mathlib.
 
 ```lean
-exact Limits.end_.lift_π (F := endBifunctor F) f h c
+exact Limits.end_.lift_π
+  (F := endBifunctor F) f (fun _ _ g => h g) c
 ```
 
-The improvement comes from aligning a product-category profunctor with the input shape expected by Mathlib. No additional β theorem is required for this consumer.
+The adapter aligns the product-category profunctor with Mathlib's existing end API. This consumer provides no evidence for a new β theorem.
 
 ## Proposed placement
 
-The preferred initial placement is the existing `Mathlib/CategoryTheory/Limits/Shapes/End.lean` module unless maintainers prefer a small adjacent module. The four declarations do not justify a new hierarchy on their own.
+The preferred initial placement is the existing `Mathlib/CategoryTheory/Limits/Shapes/End.lean` module unless maintainers prefer a small adjacent module. Four declarations do not yet justify a new hierarchy.
 
-## Acceptance gates
+## Validated gates
 
-- `lake build Scratch.MathlibEndBifunctorConsumer`
-- `lake build EndKan`
-- the candidate contains exactly one adapter and three public simplification lemmas
-- the downstream Fubini proof uses `end_.lift_π` directly
-- the product-category normal form closes with the candidate simp lemmas
-- no new structure, typeclass, end object alias, projection, lift, map, or β and η declaration enters the first PR
-- no duplicated public diagonal object lemma is introduced
-- a Mathlib maintainer confirms naming and placement before code submission
+- `lake build Scratch.MathlibEndBifunctorConsumer` passes on Lean and Mathlib `v4.31.0`
+- `lake build EndKan` passes in pull-request CI
+- the candidate contains one adapter and three equations
+- the Fubini β proof uses `end_.lift_π` directly
+- the three Fubini slice equations instantiate the proposed general equations
+- the candidate introduces no structure, typeclass, end object alias, projection, lift, map, β theorem, η theorem, or dependent transport
+- the unsupported whole-equation simp claim is excluded
 
-## Primary maintainer question
+## Maintainer questions
 
-Does Mathlib want a named `endBifunctor` adapter for profunctors on `Cᵒᵖ × C`, together with the three general object and map simplification lemmas demonstrated by the Fubini consumer?
+1. Does Mathlib want a named adapter for profunctors presented as `Cᵒᵖ × C ⥤ D`?
+2. Which, if any, of the three demonstrated equations belong in the public API and should carry `simp`?
+3. Should the accepted declarations live in `End.lean`, an adjacent module, or a more general currying API?
 
 ## Current status
 
-The proposal remains `ESCALATE AND NARROW` until the candidate builds on the pinned Mathlib `v4.31.0` environment and receives a maintainer answer on naming and placement.
+The candidate is mechanically validated and remains `ESCALATE AND NARROW`. A focused maintainer discussion should determine whether the upstream surface contains four declarations, the adapter alone, or no new API.
