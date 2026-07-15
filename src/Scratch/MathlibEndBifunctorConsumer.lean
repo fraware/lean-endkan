@@ -88,16 +88,6 @@ theorem fubini_beta_after {F : Cᵒᵖ × C ⥤ D} [HasEnd (endBifunctor F)] {X 
         Limits.end_.π (endBifunctor F) c = f c := by
   exact Limits.end_.lift_π (F := endBifunctor F) f (fun _ _ g => h g) c
 
-/-- Full dinaturality normalization requires unfolding the adapter to align dependent hom types. -/
-theorem dinaturality_normal_form {F : Cᵒᵖ × C ⥤ D} {X : D}
-    (f : ∀ c : C, X ⟶ F.obj (op c, c))
-    (h : ∀ {c c' : C} (g : c ⟶ c'),
-      f c ≫ ((endBifunctor F).obj (op c)).map g =
-        f c' ≫ ((endBifunctor F).map g.op).app c')
-    {c c' : C} (g : c ⟶ c') :
-    f c ≫ F.map (𝟙 (op c) ×ₘ g) = f c' ≫ F.map (g.op ×ₘ 𝟙 c') := by
-  simpa [endBifunctor] using h g
-
 /-- The off-diagonal object rewrite in `EndKan.Fubini.Slice` is covered directly. -/
 theorem fubini_slice_fiber (F : EndKan.Fubini.EndIdx C D ⥤ E) (cd cd' : C × D) :
     ((endBifunctor F).obj (op cd)).obj cd' = F.obj (op cd, cd') :=
