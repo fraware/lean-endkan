@@ -54,7 +54,7 @@ theorem endBifunctor_map_app {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c ⟶ c') 
 /-- The diagonal object equation is derivable and does not need a separate public declaration. -/
 theorem endBifunctor_obj_obj {F : Cᵒᵖ × C ⥤ D} (c : C) :
     ((endBifunctor F).obj (op c)).obj c = F.obj (op c, c) := by
-  simpa using endBifunctor_fiber_obj (F := F) c c
+  simp
 
 end Candidate
 
@@ -84,8 +84,9 @@ theorem fubini_beta_after {F : Cᵒᵖ × C ⥤ D} [HasEnd (endBifunctor F)] {X 
       f c ≫ ((endBifunctor F).obj (op c)).map g =
         f c' ≫ ((endBifunctor F).map g.op).app c')
     (c : C) :
-    Limits.end_.lift (F := endBifunctor F) f h ≫ Limits.end_.π (endBifunctor F) c = f c := by
-  exact Limits.end_.lift_π (F := endBifunctor F) f h c
+    Limits.end_.lift (F := endBifunctor F) f (fun _ _ g => h g) ≫
+        Limits.end_.π (endBifunctor F) c = f c := by
+  exact Limits.end_.lift_π (F := endBifunctor F) f (fun _ _ g => h g) c
 
 /-- The selected simp lemmas convert curried dinaturality into product-category form. -/
 theorem dinaturality_normal_form {F : Cᵒᵖ × C ⥤ D} {X : D}
@@ -95,7 +96,7 @@ theorem dinaturality_normal_form {F : Cᵒᵖ × C ⥤ D} {X : D}
         f c' ≫ ((endBifunctor F).map g.op).app c')
     {c c' : C} (g : c ⟶ c') :
     f c ≫ F.map (𝟙 (op c) ×ₘ g) = f c' ≫ F.map (g.op ×ₘ 𝟙 c') := by
-  simpa only [endBifunctor_obj_map, endBifunctor_map_app] using h g
+  simpa only [endBifunctor_fiber_obj, endBifunctor_obj_map, endBifunctor_map_app] using h g
 
 /-- The off-diagonal object rewrite used by `EndKan.Fubini.Slice` is covered directly. -/
 theorem fubini_slice_fiber (F : EndKan.Fubini.EndIdx C D ⥤ E) (cd cd' : C × D) :
