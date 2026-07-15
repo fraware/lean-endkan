@@ -1,98 +1,40 @@
-# Draft Mathlib module structure — end β/η
+# Proposed Mathlib placement for the minimal adapter
 
-Proposed layout under `Mathlib/CategoryTheory/Limits/Shapes/End/` (new **directory**
-alongside the existing `End.lean` file; the file may later be renamed `Basic.lean` in a
-separate Mathlib refactor).
+## Preferred first placement
 
-## `Diagonal.lean`
+The narrowed proposal should initially live in `Mathlib/CategoryTheory/Limits/Shapes/End.lean`, close to the existing `end_` API.
 
-Namespace: `CategoryTheory.Limits` (extend existing `End` section).
+The candidate adds four declarations and does not introduce a new mathematical object or universal property. A dedicated `End/Diagonal.lean` hierarchy would create more navigation and naming surface than the current evidence supports.
 
 ```lean
-/-!
-# Ends of profunctors on `Cᵒᵖ × C`
-
-Thin diagonal API over `end_` for functors `F : Cᵒᵖ × C ⥤ D`, via currying to
-`Cᵒᵖ ⥤ C ⥤ D`.
--/
+namespace CategoryTheory.Limits
 
 variable {C D : Type*} [Category C] [Category D]
 
-/-- Curried form of a profunctor `Cᵒᵖ × C ⥤ D`, as used by `end_`. -/
-noncomputable def endBifunctor (F : Cᵒᵖ × C ⥤ D) : Cᵒᵖ ⥤ C ⥤ D := curry.obj F
+/-- Curried form of a profunctor `Cᵒᵖ × C ⥤ D`, as consumed by the end API. -/
+abbrev endBifunctor (F : Cᵒᵖ × C ⥤ D) : Cᵒᵖ ⥤ C ⥤ D :=
+  curry.obj F
 
--- @[simp] fiber lemmas: endBifunctor_obj_map, endBifunctor_map_app, ...
+@[simp] theorem endBifunctor_fiber_obj ...
+@[simp] theorem endBifunctor_obj_map ...
+@[simp] theorem endBifunctor_map_app ...
 
-/-- Wedge data for a profunctor on `Cᵒᵖ × C`, expressed on the diagonal. -/
-structure DiagonalWedge (X : D) (F : Cᵒᵖ × C ⥤ D) where
-  app : ∀ c : C, X ⟶ F.obj (op c, c)
-  dinaturality : ∀ {c c' : C} (f : c ⟶ c'), ...
-
-/-- The end of `F : Cᵒᵖ × C ⥤ D`. -/
-noncomputable abbrev endDiagonal (F : Cᵒᵖ × C ⥤ D) [HasEnd (endBifunctor F)] : D :=
-  end_ (endBifunctor F)
-
-namespace endDiagonal
-
-noncomputable def π ... 
-noncomputable def lift ...
-theorem lift_π ...
-theorem hom_ext ...    -- from end_.hom_ext
-theorem post_ext ...   -- morphisms out of the end
-theorem map ...
-
-end endDiagonal
+end CategoryTheory.Limits
 ```
 
-Design notes:
+## Import boundary
 
-- Prefer `endDiagonal` over `EndObj` (Mathlib uses lowercase `end_`).
-- `DiagonalWedge` avoids clashing with the existing `Wedge F` for `F : Jᵒᵖ ⥤ J ⥤ C`;
-  alternatively expose `def diagonalWedge (F) := Wedge (endBifunctor F)` with simp lemmas
-  relating `app` to `F.obj (op c, c)`.
-- `Cowedge` dual packaging is optional for PR #1 if reviewers prefer only wedge data.
+The implementation needs the existing end module together with currying, products, and opposites. It should avoid imports from `lean-endkan` and should add no new typeclass assumptions.
 
-## `BetaEta.lean`
+## Naming boundary
 
-```lean
-/-!
-# β/η rules for diagonal ends
+The first PR asks maintainers to decide only two points.
 
-`beta` / `eta` lemmas for rewriting through `endDiagonal.π` and `endDiagonal.lift`.
--/
+1. Whether `endBifunctor` is an acceptable name for the curried profunctor adapter.
+2. Whether the declarations belong in `End.lean` or a small adjacent module.
 
-namespace endDiagonal
+The proposal deliberately leaves `DiagonalWedge`, `endDiagonal`, dedicated projections and lifts, β and η aliases, and a diagonal-end namespace for later evidence.
 
-theorem beta {F : Cᵒᵖ × C ⥤ D} ... :
-    lift ω ≫ π F c = ω.app c := lift_π ...
+## Expansion rule
 
-theorem eta {F : Cᵒᵖ × C ⥤ D} {X : D} (f : X ⟶ endDiagonal F) :
-    f = lift ⟨(fun c => f ≫ π F c), ...⟩ := ...
-
-@[reassoc (attr := simp)]
-theorem π_beta {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c ⟶ c') :
-    π F c ≫ (endBifunctor F).obj (op c).map f =
-      π F c' ≫ (endBifunctor F).map f.op |>.app c' := ...
-
-end endDiagonal
-```
-
-Do **not** duplicate `end_.map_id` / `end_.map_comp`; link in module docstring.
-
-## `Examples.lean`
-
-Abstract-category examples only (no `endkan_beta` / tactics). See
-`src/Scratch/MathlibEndBetaExamples.lean` in this repo for a buildable mirror using
-`EndKan.End` lemmas.
-
-Suggested Mathlib examples:
-
-1. β-reduction for a manually built dinatural family.
-2. η-expansion recovering a morphism into the end.
-3. Naturality of `end_.map` along a profunctor transformation (via `π_beta` + `beta`).
-
-## Import policy
-
-- `Diagonal.lean` imports existing `End.lean` + currying/products.
-- `BetaEta.lean` imports `Diagonal.lean` only.
-- `Examples.lean` imports `BetaEta.lean`; not imported by any other Mathlib module.
+A later module split or namespace layer requires multiple accepted downstream consumers whose proofs remain materially clearer after introducing the additional abstraction. The initial Fubini consumer supports the adapter and its normalization lemmas only.
