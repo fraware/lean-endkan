@@ -3,9 +3,9 @@ open Lake DSL
 
 package «lean-endkan» where
   srcDir := "src"
-  -- Fixed Mathlib version; change together with `lean-toolchain` when upgrading Lean.
+  -- Audit baseline: Mathlib master on 2026-08-24. Update together with `lean-toolchain`.
   require mathlib from git
-    "https://github.com/leanprover-community/mathlib4.git" @ "v4.31.0"
+    "https://github.com/leanprover-community/mathlib4.git" @ "dc84fcbe9e049439c1c36d6db290cc0565f77788"
 
 @[default_target]
 lean_lib «EndKan» where
