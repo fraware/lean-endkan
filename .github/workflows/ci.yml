@@ -74,6 +74,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Refresh security-sensitive lock entries
+        working-directory: rust_production
+        run: cargo update -p anyhow
+
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
