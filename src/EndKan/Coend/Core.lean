@@ -39,13 +39,11 @@ theorem coendDiagonal_app {F : C × Cᵒᵖ ⥤ E} {c c' : C} :
 theorem coendBifunctor_map_app {F : C × Cᵒᵖ ⥤ E} {c c' : C} (f : c ⟶ c') :
     ((coendBifunctor F).map f.op).app c = F.map (𝟙 c ×ₘ f.op) := by
   dsimp [coendBifunctor, coendSwap, curryObj, Functor.comp_obj, swap_obj]
-  rfl
 
 @[simp]
 theorem coendBifunctor_obj_map {F : C × Cᵒᵖ ⥤ E} {c c' : C} (f : c ⟶ c') :
     ((coendBifunctor F).obj (op c')).map f = F.map (f ×ₘ 𝟙 (op c')) := by
   dsimp [coendBifunctor, coendSwap, curryObj, Functor.comp_obj, swap_obj]
-  rfl
 
 /-- A natural transformation on swapped arguments, for use with `coendBifunctor`. -/
 def coendNatTrans {F G : C × Cᵒᵖ ⥤ E} (α : F ⟶ G) :

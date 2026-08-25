@@ -16,9 +16,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: leanprover/lean-action@v1
-        with:
-          build-args: EndKan
+      - name: Install Lean toolchain
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/elan" install "$(cat lean-toolchain)"
+          "$HOME/.elan/bin/elan" default "$(cat lean-toolchain)"
+
+      - name: Refresh dependencies
+        run: lake update
+
+      - name: Fetch Mathlib cache
+        run: lake exe cache get
+
+      - name: Build EndKan
+        run: lake build EndKan
 
       - name: Executable smoke tests
         run: |
@@ -43,6 +55,10 @@ jobs:
             rust_production/target
           key: cargo-${{ runner.os }}-${{ hashFiles('rust_production/Cargo.lock') }}
 
+      - name: Refresh security-sensitive lock entries
+        working-directory: rust_production
+        run: cargo update -p anyhow
+
       - name: Cargo fmt
         working-directory: rust_production
         run: cargo fmt --check
@@ -60,6 +76,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Refresh security-sensitive lock entries
+        working-directory: rust_production
+        run: cargo update -p anyhow
+
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,6 +91,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Refresh security-sensitive lock entries
+        working-directory: rust_production
+        run: cargo update -p anyhow
 
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
