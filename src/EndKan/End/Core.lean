@@ -42,7 +42,6 @@ theorem post_comp_endBifunctor_map {F : Cᵒᵖ × C ⥤ D} {c c' : C} (f : c �
     {X : D} (h : X ⟶ F.obj (op c, c)) :
     h ≫ ((endBifunctor F).obj (op c)).map f = h ≫ F.map (𝟙 (op c) ×ₘ f) := by
   conv_rhs => rw [← endBifunctor_obj_map]
-  rfl
 
 /-- A dinatural transformation from `X` into `F`, expressed via the curried bifunctor. -/
 structure DinaturalTransformation (X : D) (F : Cᵒᵖ × C ⥤ D) where
