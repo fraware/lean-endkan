@@ -432,7 +432,8 @@ theorem coendSliceOpCovToSlice_post_ι [CoendSliceContrIso F]
   rw [coendSliceOpCovToSlice_eq_opCovIso F c f]
   refine (cancel_epi (eqToHom (coendSlice_obj F d c))).mp ?_
   rw [← Category.assoc, ← Category.assoc, ← coendSliceOpCovIso_post_ι F c d d' f]
-  simp only [eqToIso.inv, eqToIso.hom, eqToHom_trans, eqToHom_refl, Category.id_comp, Category.assoc]
+  simp only [eqToIso.inv, eqToIso.hom, eqToHom_trans, eqToHom_refl, Category.id_comp,
+    Category.comp_id, Category.assoc]
 
 @[reassoc]
 theorem coendSliceOpCovToSlice_post_ι_wedge [CoendSliceContrIso F]
